@@ -12,10 +12,15 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type LoginRouteProp = RouteProp<RootStackParamList, 'Login'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -23,12 +28,63 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<LoginRouteProp>();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const googleWebClientId =
+    Constants.expoConfig?.extra?.googleWebClientId ||
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+
+  const googleAndroidClientId =
+    Constants.expoConfig?.extra?.googleAndroidClientId ||
+    process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    // Used by Expo Go and native web auth
+    expoClientId: googleWebClientId,
+    // Required when running on web
+    webClientId: googleWebClientId,
+    // For native / dev builds, you must set googleAndroidClientId in app.json extra
+    androidClientId: Platform.OS === 'android' ? googleAndroidClientId : undefined,
+  });
+
+  useEffect(() => {
+    const handleGoogleResponse = async () => {
+      if (response?.type === 'success' && response.authentication?.idToken) {
+        try {
+          setGoogleLoading(true);
+          await loginWithGoogle(response.authentication.idToken);
+          const redirect = route.params?.redirect;
+          if (redirect) {
+            if (redirect.startsWith('ProductDetail:')) {
+              const slug = redirect.replace('ProductDetail:', '');
+              navigation.navigate('ProductDetail', { slug });
+            } else if (redirect === 'Cart' || redirect === 'Checkout') {
+              navigation.navigate('MainTabs', { screen: 'Cart' });
+            } else {
+              navigation.navigate('MainTabs', { screen: 'Home' });
+            }
+          } else {
+            navigation.navigate('MainTabs', { screen: 'Home' });
+          }
+        } catch (error: any) {
+          Alert.alert(
+            'Google Login Failed',
+            error.response?.data?.message || 'Unable to login with Google'
+          );
+        } finally {
+          setGoogleLoading(false);
+        }
+      }
+    };
+
+    handleGoogleResponse();
+  }, [response]);
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -116,6 +172,37 @@ export default function LoginScreen() {
                 <Text style={styles.loginButtonText}>Login</Text>
               )}
             </TouchableOpacity>
+
+            {Platform.OS !== 'web' && (
+              <>
+                <View style={styles.orContainer}>
+                  <View style={styles.orLine} />
+                  <Text style={styles.orText}>OR</Text>
+                  <View style={styles.orLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.googleButton,
+                    (googleLoading || !request) && styles.loginButtonDisabled,
+                  ]}
+                  onPress={() => promptAsync()}
+                  disabled={googleLoading || !request}
+                  activeOpacity={0.8}
+                >
+                  {googleLoading ? (
+                    <ActivityIndicator color="#000" />
+                  ) : (
+                    <View style={styles.googleContent}>
+                      <View style={styles.googleIconCircle}>
+                        <Text style={styles.googleIconLetter}>G</Text>
+                      </View>
+                      <Text style={styles.googleButtonText}>Continue with Google</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
 
             <View style={styles.registerPrompt}>
               <Text style={styles.registerText}>Don't have an account? </Text>
@@ -221,6 +308,57 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  orText: {
+    marginHorizontal: 8,
+    fontSize: 12,
+    color: '#9ca3af',
+    fontWeight: '500',
+  },
+  googleButton: {
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginTop: 8,
+  },
+  googleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  googleIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIconLetter: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4285F4',
+  },
+  googleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
   },
   registerPrompt: {
     flexDirection: 'row',

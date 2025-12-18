@@ -10,6 +10,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,8 +74,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await AsyncStorage.removeItem('token');
   };
 
+  const loginWithGoogle = async (idToken: string) => {
+    // NOTE: This expects a backend endpoint that exchanges the Google ID token
+    // for your own JWT and user object. Adjust the URL/body to match your API.
+    const response = await api.post('/api/auth/google-mobile', { idToken });
+    setUser(response.data.user);
+    if (response.data.token) {
+      await AsyncStorage.setItem('token', response.data.token);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, fetchMe }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, fetchMe, loginWithGoogle }}
+    >
       {children}
     </AuthContext.Provider>
   );
