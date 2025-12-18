@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "helloonebahrain-clean",
+    "slug": "helloonebahrain-clean",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.helloonebahrain"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiBaseUrl": "https://hello-bahrain-e-commerce-client.vercel.app",
+      "supabaseUrl": "https://clmhzxiuzqvebzlkbdjs.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsbWh6eGl1enF2ZWJ6bGtiZGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0Nzg0MjIsImV4cCI6MjA4MDA1NDQyMn0.pSUjWc4Ryu7xJ94n7DFAngGYMzT6gFi8K77OUVYeb3Y"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
