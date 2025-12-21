@@ -34,11 +34,30 @@ export const getSupabase = (): SupabaseClient => {
       });
     }
 
+    // Detect if we're on web platform
+    const isWeb = typeof window !== 'undefined';
+    
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: false,
+        // Enable URL detection for web OAuth callbacks
+        detectSessionInUrl: isWeb,
+        // Use browser storage on web, AsyncStorage on mobile
+        storage: isWeb ? undefined : {
+          getItem: async (key: string) => {
+            const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+            return await AsyncStorage.getItem(key);
+          },
+          setItem: async (key: string, value: string) => {
+            const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+            return await AsyncStorage.setItem(key, value);
+          },
+          removeItem: async (key: string) => {
+            const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+            return await AsyncStorage.removeItem(key);
+          },
+        },
       },
     });
   }

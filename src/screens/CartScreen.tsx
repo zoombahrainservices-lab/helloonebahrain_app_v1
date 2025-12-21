@@ -110,24 +110,24 @@ export default function CartScreen() {
                 {item.stockQuantity && item.quantity >= item.stockQuantity && (
                   <Text style={styles.stockWarning}>⚠ Max stock reached</Text>
                 )}
-              </View>
-
-              <View style={styles.quantityContainer}>
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={() => updateQuantity(item.productId, item.quantity - 1)}
-                  disabled={item.quantity <= 1}
-                >
-                  <Text style={styles.quantityButtonText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.quantityText}>{item.quantity}</Text>
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={() => updateQuantity(item.productId, item.quantity + 1)}
-                  disabled={item.stockQuantity !== undefined && item.quantity >= item.stockQuantity}
-                >
-                  <Text style={styles.quantityButtonText}>+</Text>
-                </TouchableOpacity>
+                
+                <View style={styles.quantityContainer}>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => updateQuantity(item.productId, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
+                  >
+                    <Text style={styles.quantityButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.quantityText}>{item.quantity}</Text>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => updateQuantity(item.productId, item.quantity + 1)}
+                    disabled={item.stockQuantity !== undefined && item.quantity >= item.stockQuantity}
+                  >
+                    <Text style={styles.quantityButtonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.itemTotal}>
@@ -249,25 +249,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 8,
-    marginRight: 8,
+    borderRadius: 6,
+    marginTop: 8,
+    alignSelf: 'flex-start',
   },
   quantityButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minWidth: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quantityButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#374151',
+    fontWeight: '600',
   },
   quantityText: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    fontSize: 12,
     fontWeight: '600',
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderColor: '#e5e7eb',
+    minWidth: 32,
+    textAlign: 'center',
   },
   itemTotal: {
     alignItems: 'flex-end',

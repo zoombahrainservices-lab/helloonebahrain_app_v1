@@ -17,6 +17,7 @@ import { supabaseHelpers } from '../lib/supabase-helpers';
 import { Product } from '../lib/types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { formatPrice } from '../lib/currency';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import ProductCard from '../components/ProductCard';
@@ -32,6 +33,7 @@ export default function ProductDetailScreen() {
   const { slug } = route.params;
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -117,7 +119,7 @@ export default function ProductDetailScreen() {
 
     if (product) {
       addItem(product, quantity);
-      Alert.alert('Success', 'Product added to cart');
+      showToast('Product added to cart');
     }
   };
 

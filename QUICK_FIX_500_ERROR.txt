@@ -1,0 +1,100 @@
+================================================================================
+  GOOGLE OAUTH 500 ERROR - QUICK FIX GUIDE
+================================================================================
+
+The 500 "unexpected_failure" error means Supabase Google OAuth is NOT configured.
+
+THIS IS NOT A CODE ISSUE - IT'S A SUPABASE CONFIGURATION ISSUE.
+
+================================================================================
+  STEP 1: ENABLE GOOGLE PROVIDER IN SUPABASE (MOST IMPORTANT!)
+================================================================================
+
+1. Open: https://supabase.com/dashboard/project/clmhzxiuzqvebzlkbdjs/auth/providers
+
+2. Click on "Google" in the list
+
+3. Toggle "Enable Google provider" to ON (this is the main issue!)
+
+4. Enter:
+   Client ID: 120230169088-7ppn1sr6mnvekrr6m5m7fq8pu5ktjo4v.apps.googleusercontent.com
+   Client Secret: [Get from Google Cloud Console - see Step 2]
+
+5. Click "SAVE" button
+
+================================================================================
+  STEP 2: GET GOOGLE CLIENT SECRET
+================================================================================
+
+1. Open: https://console.cloud.google.com/apis/credentials
+
+2. Find "HelloBahrain Web" OAuth 2.0 Client ID
+
+3. Click to edit it
+
+4. Copy the "Client secret" value
+
+5. Paste it into Supabase (Step 1, field 4)
+
+================================================================================
+  STEP 3: CONFIGURE SUPABASE REDIRECT URLs
+================================================================================
+
+1. Open: https://supabase.com/dashboard/project/clmhzxiuzqvebzlkbdjs/settings/general
+
+2. Set "Site URL" to: http://localhost:8081
+
+3. In "Redirect URLs" section, click "Add URL" and add these 3 URLs:
+   - http://localhost:8081
+   - http://localhost:19006
+   - https://clmhzxiuzqvebzlkbdjs.supabase.co/auth/v1/callback
+
+4. Click "SAVE"
+
+================================================================================
+  STEP 4: CONFIGURE GOOGLE CLOUD CONSOLE
+================================================================================
+
+1. Open: https://console.cloud.google.com/apis/credentials
+
+2. Find "HelloBahrain Web" OAuth 2.0 Client ID
+
+3. Click to edit
+
+4. Under "Authorized redirect URIs", click "Add URI"
+
+5. Add: https://clmhzxiuzqvebzlkbdjs.supabase.co/auth/v1/callback
+
+6. Click "SAVE"
+
+================================================================================
+  STEP 5: WAIT AND TEST
+================================================================================
+
+1. Wait 2-3 minutes for changes to propagate
+
+2. Clear browser cache (Ctrl+Shift+Delete)
+
+3. Run: npx expo start --clear
+
+4. Press 'w' to open in browser
+
+5. Click "Continue with Google"
+
+================================================================================
+  TROUBLESHOOTING
+================================================================================
+
+Still getting 500 error?
+
+✓ Check Supabase Dashboard → Logs → Auth (see actual error)
+✓ Verify Google provider toggle is ON (not just saved, but ENABLED)
+✓ Make sure all URLs match exactly (no trailing slashes)
+✓ Wait 5 minutes after configuration
+✓ Try in incognito/private window
+
+The most common issue: Google provider is NOT enabled in Supabase.
+Make sure the toggle is ON, not just the form filled out!
+
+================================================================================
+

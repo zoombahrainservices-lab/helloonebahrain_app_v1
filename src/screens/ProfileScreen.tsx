@@ -43,21 +43,80 @@ const Icon = ({ name, size, color }: { name: string; size: number; color: string
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
+  // Hooks must be called at the top level - cannot be in try-catch
   const { user, logout, loading } = useAuth();
   const navigation = useNavigation<NavigationProp>();
 
+  // Redirect to login if not authenticated
+  // Use a ref to prevent multiple navigation calls
+  const hasNavigated = React.useRef(false);
+  
+  React.useEffect(() => {
+    // Only navigate once and only if we're sure there's no user
+    if (!loading && !user && !hasNavigated.current) {
+      hasNavigated.current = true;
+      
+      // Use setTimeout to ensure navigation happens after render
+      setTimeout(() => {
+        try {
+          if (__DEV__) {
+            console.log('🔒 No user, redirecting to Login');
+          }
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
+        } catch (error) {
+          if (__DEV__) {
+            console.error('❌ Navigation error:', error);
+          }
+          // Fallback: just navigate
+          navigation.navigate('Login' as any);
+        }
+      }, 100);
+    }
+    
+    // Reset flag if user logs in
+    if (user) {
+      hasNavigated.current = false;
+    }
+  }, [user, loading, navigation]);
+
   const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
+    try {
+      if (__DEV__) {
+        console.log('🔴 LOGOUT BUTTON PRESSED');
+      }
+
+      // Call logout and wait for it to complete
           await logout();
-          navigation.navigate('MainTabs', { screen: 'Home' });
-        },
-      },
-    ]);
+
+      if (__DEV__) {
+        console.log('✅ Logout function completed');
+      }
+
+      // Wait a bit to ensure all cleanup is done
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Navigate to Login screen and reset navigation stack
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+
+      if (__DEV__) {
+        console.log('🔄 Navigation reset to Login');
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('❌ Logout handler error:', error);
+      }
+      // Force navigation even if logout fails
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
   };
 
   if (loading) {
@@ -69,13 +128,30 @@ export default function ProfileScreen() {
   }
 
   if (!user) {
+    // Don't render anything if we're redirecting
+    if (hasNavigated.current) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#dc2626" />
+        </View>
+      );
+    }
+    
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyTitle}>Not Logged In</Text>
         <Text style={styles.emptyText}>Please login to view your profile</Text>
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => {
+            try {
+              navigation.navigate('Login' as any);
+            } catch (error) {
+              if (__DEV__) {
+                console.error('❌ Navigation error:', error);
+              }
+            }
+          }}
         >
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
@@ -84,13 +160,13 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={styles.header}>
       <View style={styles.avatar}>
         <Icon name="person" size={40} color="#dc2626" />
       </View>
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <Text style={styles.name}>{user.name || 'User'}</Text>
+        <Text style={styles.email}>{user.email || ''}</Text>
         {user.role === 'admin' && (
           <View style={styles.adminBadge}>
             <Text style={styles.adminBadgeText}>Admin</Text>
@@ -101,20 +177,36 @@ export default function ProfileScreen() {
       <View style={styles.menu}>
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigation.navigate('Orders')}
+          onPress={() => {
+            try {
+              navigation.navigate('Orders' as any);
+            } catch (error) {
+              if (__DEV__) {
+                console.error('❌ Navigation error:', error);
+              }
+            }
+          }}
+          activeOpacity={0.7}
         >
           <Icon name="receipt-outline" size={24} color="#374151" />
           <Text style={styles.menuItemText}>My Orders</Text>
           <Text style={{ fontSize: 20, color: '#9ca3af' }}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          activeOpacity={0.7}
+        >
           <Icon name="settings-outline" size={24} color="#374151" />
           <Text style={styles.menuItemText}>Settings</Text>
           <Text style={{ fontSize: 20, color: '#9ca3af' }}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
           <Icon name="log-out-outline" size={24} color="#ef4444" />
           <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
         </TouchableOpacity>

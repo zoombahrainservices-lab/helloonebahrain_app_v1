@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, Platform } from
 import { Product } from '../lib/types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { formatPrice } from '../lib/currency';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +18,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigation = useNavigation<NavigationProp>();
   const [adding, setAdding] = useState(false);
 
@@ -33,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     try {
       setAdding(true);
       addItem(product, 1);
-      Alert.alert('Success', 'Product added to cart');
+      showToast('Product added to cart');
     } catch (error) {
       Alert.alert('Error', 'Failed to add product to cart');
     } finally {

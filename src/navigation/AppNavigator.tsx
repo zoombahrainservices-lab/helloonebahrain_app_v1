@@ -75,6 +75,8 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
   const IconComponent = Platform.OS === 'web' ? FallbackIcon : Ionicons;
+  
+  // Hook must be called at top level
   const { getItemCount } = useCart();
   const cartCount = getItemCount();
 
@@ -175,6 +177,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
+        initialRouteName="MainTabs"
         screenOptions={{
           headerShown: true,
           headerStyle: {

@@ -16,6 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 import { formatPrice } from '../lib/currency';
 import { api } from '../lib/api';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -27,6 +28,7 @@ export default function CheckoutScreen() {
   const { user, loading: authLoading } = useAuth();
   const { items, getTotal, clearCart } = useCart();
   const { language } = useLanguage();
+  const { showToast } = useToast();
   const navigation = useNavigation<NavigationProp>();
 
   const [formData, setFormData] = useState({
@@ -106,16 +108,11 @@ export default function CheckoutScreen() {
         // COD order created successfully
         clearCart();
         setSubmitting(false);
-        Alert.alert(
-          'Order Placed Successfully!',
-          'Your order has been placed. You will pay when you receive your order.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('MainTabs', { screen: 'Profile' }),
-            },
-          ]
-        );
+        showToast('Order placed successfully! You will pay when you receive your order.', 'success');
+        // Navigate after toast is shown
+        setTimeout(() => {
+          navigation.navigate('MainTabs', { screen: 'Profile' });
+        }, 1000);
         return; // Exit early for COD
       } catch (error: any) {
         // Only handle order creation errors for COD

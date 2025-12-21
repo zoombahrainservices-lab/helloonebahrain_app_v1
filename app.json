@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "helloonebahrain",
-    "slug": "helloonebahrain",
+    "slug": "helloonebh",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,8 +32,8 @@
       "apiBaseUrl": "https://hello-bahrain-e-commerce-client.vercel.app",
       "supabaseUrl": "https://clmhzxiuzqvebzlkbdjs.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsbWh6eGl1enF2ZWJ6bGtiZGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0Nzg0MjIsImV4cCI6MjA4MDA1NDQyMn0.pSUjWc4Ryu7xJ94n7DFAngGYMzT6gFi8K77OUVYeb3Y",
-      "googleWebClientId": "120230169088-a79ifejk20t2euphko041d7ft7s411mv.apps.googleusercontent.com",
-      "googleAndroidClientId": "120230169088-a79ifejk20t2euphko041d7ft7s411mv.apps.googleusercontent.com",
+      "googleWebClientId": "120230169088-7ppn1sr6mnvekrr6m5m7fq8pu5ktjo4v.apps.googleusercontent.com",
+      "googleAndroidClientId": "120230169088-kargili4m200ni6ljni6tegs570m93u3.apps.googleusercontent.com",
       "eas": {
         "projectId": "59c4cd2e-f293-4d0c-bf8c-6d21e7be5052"
       }
@@ -41,8 +41,9 @@
     "scheme": "hellobahrain",
     "plugins": [
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin"
     ],
-    "owner": "zoombh"
+    "owner": "zoombh1"
   }
 }
