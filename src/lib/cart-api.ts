@@ -7,7 +7,7 @@ import { CartItem, Product } from './types';
  */
 
 // Transform database cart item to frontend format
-const transformCartItem = (dbItem: any, product?: Product): CartItem => {
+const transformCartItem = (dbItem: any, product?: Partial<Product>): CartItem => {
   return {
     productId: dbItem.product_id,
     name: dbItem.product?.name || dbItem.name || '',
@@ -167,7 +167,9 @@ export const cartApi = {
 
     if (quantity <= 0) {
       // Remove item if quantity is 0 or less
-      return this.removeItem(userId, productId);
+      await this.removeItem(userId, productId);
+      // Return empty cart item after removal
+      throw new Error('Item removed from cart');
     }
 
     // Check product stock
@@ -352,6 +354,9 @@ export const cartApi = {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   },
 };
+
+
+
 
 
 

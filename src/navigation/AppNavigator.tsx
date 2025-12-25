@@ -5,7 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Platform, Text, Image, View } from 'react-native';
+import { Platform, Text, Image, View, StyleSheet } from 'react-native';
+import { useCart } from '../contexts/CartContext';
 
 // Conditionally import Ionicons - use simple text icons on web to avoid expo-font issue
 let Ionicons: any;
@@ -74,6 +75,8 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
   const IconComponent = Platform.OS === 'web' ? FallbackIcon : Ionicons;
+  const { getItemCount } = useCart();
+  const cartCount = getItemCount();
 
   return (
     <Tab.Navigator
@@ -91,6 +94,28 @@ function MainTabs() {
             iconName = focused ? 'person' : 'person-outline';
           } else {
             iconName = 'help-outline';
+          }
+
+          if (route.name === 'Cart' && cartCount > 0) {
+            // Show cart icon with badge
+            if (Platform.OS === 'web' || !Ionicons) {
+              return (
+                <View style={styles.iconContainer}>
+                  <FallbackIcon name={iconName} size={size} color={color} />
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+                  </View>
+                </View>
+              );
+            }
+            return (
+              <View style={styles.iconContainer}>
+                <Ionicons name={iconName as any} size={size} color={color} />
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+                </View>
+              </View>
+            );
           }
 
           if (Platform.OS === 'web' || !Ionicons) {
@@ -225,3 +250,30 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -12,
+    backgroundColor: '#dc2626',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+});

@@ -35,9 +35,14 @@ export default function OrdersScreen() {
     try {
       setLoading(true);
       // Use Supabase directly to fetch orders
+      // Pass user.id so it works for both Supabase and backend API users
       const { getUserOrders } = await import('../lib/orders-api');
-      const userOrders = await getUserOrders();
+      const userOrders = await getUserOrders(user?.id);
       setOrders(userOrders);
+      
+      if (__DEV__) {
+        console.log('📦 Fetched orders:', userOrders.length);
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
       setOrders([]);

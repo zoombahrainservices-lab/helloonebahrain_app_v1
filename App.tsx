@@ -1,15 +1,13 @@
 import React, { useEffect, ErrorInfo } from 'react';
 import { View, ActivityIndicator, StyleSheet, Text, Platform, Alert } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { getSupabase } from './src/lib/supabase';
 import AppNavigator from './src/navigation/AppNavigator';
 import { CartProvider } from './src/contexts/CartContext';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import { ToastProvider } from './src/contexts/ToastContext';
-
-// Complete auth session when app loads to handle OAuth redirects
-WebBrowser.maybeCompleteAuthSession();
 
 // Loading screen component
 function LoadingScreen() {
@@ -73,8 +71,49 @@ function AppContent() {
 
 export default function App() {
   useEffect(() => {
-    // Ensure auth session is completed on app mount
-    WebBrowser.maybeCompleteAuthSession();
+    // Handle deep link callbacks for mobile OAuth
+    if (Platform.OS !== 'web') {
+      const handleDeepLink = async (event: { url: string }) => {
+        const { url } = event;
+        
+        // Only log OAuth callbacks, don't process them
+        // AuthContext.loginWithGoogle() handles all processing via WebBrowser result
+        if (url.includes('access_token') || url.includes('error')) {
+          if (__DEV__) {
+            // Only log once to reduce spam - check if we already logged this URL
+            const urlHash = url.split('#')[1]?.substring(0, 50) || '';
+            if (!handleDeepLink.lastLoggedUrl || handleDeepLink.lastLoggedUrl !== urlHash) {
+              console.log('🔗 OAuth deep link received (AuthContext will process via WebBrowser result)');
+              handleDeepLink.lastLoggedUrl = urlHash;
+            }
+          }
+          // Don't process - AuthContext handles it
+          return;
+        }
+        
+        // Log other deep links normally
+        if (__DEV__) {
+          console.log('🔗 Deep link received:', url.substring(0, 100));
+        }
+      };
+      
+      // Track last logged URL to prevent duplicate logs
+      (handleDeepLink as any).lastLoggedUrl = '';
+      
+      // Listen for initial deep link (app opened via deep link)
+      Linking.getInitialURL().then((url) => {
+        if (url) {
+          handleDeepLink({ url });
+        }
+      });
+      
+      // Listen for deep links while app is running
+      const subscription = Linking.addEventListener('url', handleDeepLink);
+      
+      return () => {
+        subscription.remove();
+      };
+    }
     
     // Handle OAuth callback on web
     if (Platform.OS === 'web' && typeof window !== 'undefined') {

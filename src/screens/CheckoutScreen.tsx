@@ -81,27 +81,52 @@ export default function CheckoutScreen() {
     setSubmitting(true);
     setError(''); // Clear any previous errors
 
-    // Get Supabase session to verify user is logged in
-    const { getSupabase } = await import('../lib/supabase');
-    const supabase = getSupabase();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      // User is not logged in
+    // Check if user is logged in (from AuthContext)
+    if (!user || !user.id) {
       if (__DEV__) {
-        console.error('❌ User not authenticated:', sessionError?.message || 'No session');
+        console.error('❌ User not authenticated: No user in AuthContext');
       }
       setSubmitting(false);
       setError('Please log in to place an order');
       navigation.navigate('Login', { redirect: 'Checkout' });
       return;
     }
+
+    // Get Supabase session (for Supabase auth users) or use user from AuthContext
+    const { getSupabase } = await import('../lib/supabase');
+    const supabase = getSupabase();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (__DEV__) {
-      console.log('✅ User authenticated, proceeding with order creation');
-      console.log('✅ User ID:', session.user.id);
-      console.log('✅ User Email:', session.user.email);
-      console.log('✅ Cart items:', items.length);
+    // Determine user ID and email
+    let userId: string;
+    let userEmail: string;
+    let userName: string;
+    
+    if (session?.user) {
+      // User logged in via Supabase (Google auth or Supabase email/password)
+      userId = session.user.id;
+      userEmail = session.user.email || user.email || '';
+      userName = session.user.user_metadata?.full_name || user.name || userEmail.split('@')[0] || 'User';
+      
+      if (__DEV__) {
+        console.log('✅ User authenticated via Supabase, proceeding with order creation');
+        console.log('✅ User ID:', userId);
+        console.log('✅ User Email:', userEmail);
+        console.log('✅ Cart items:', items.length);
+      }
+    } else {
+      // User logged in via backend API - use AuthContext user
+      userId = user.id;
+      userEmail = user.email || '';
+      userName = user.name || userEmail.split('@')[0] || 'User';
+      
+      if (__DEV__) {
+        console.log('✅ User authenticated via backend API, proceeding with order creation');
+        console.log('✅ User ID:', userId);
+        console.log('✅ User Email:', userEmail);
+        console.log('✅ Cart items:', items.length);
+        console.log('⚠️ Note: User will be created in users table if needed');
+      }
     }
 
     // For COD - handle separately, no payment gateway needed
@@ -111,9 +136,9 @@ export default function CheckoutScreen() {
         const { createOrder } = await import('../lib/orders-api');
         
         const orderData = {
-          userId: session.user.id,
-          userEmail: session.user.email || '',
-          userName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          userId: userId,
+          userEmail: userEmail,
+          userName: userName,
           items: items.map((item) => ({
             productId: item.productId,
             name: item.name,
@@ -163,10 +188,10 @@ export default function CheckoutScreen() {
       // Use Supabase directly to create order (bypasses backend authentication issues)
       const { createOrder } = await import('../lib/orders-api');
       
-      const orderData = {
-        userId: session.user.id,
-        userEmail: session.user.email || '',
-        userName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+        const orderData = {
+          userId: userId,
+          userEmail: userEmail,
+          userName: userName,
         items: items.map((item) => ({
           productId: item.productId,
           name: item.name,

@@ -55,7 +55,11 @@ export default function LoginScreen() {
         navigation.navigate('MainTabs', { screen: 'Home' });
       }
     } catch (error: any) {
-      Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
+      const errorMessage = error.message || error.response?.data?.message || 'Invalid credentials. Please check your email and password.';
+      Alert.alert('Login Failed', errorMessage);
+      if (__DEV__) {
+        console.error('Login error:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,8 +69,12 @@ export default function LoginScreen() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
+      
+      // Wait a brief moment to ensure auth state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // On web, redirect will happen automatically
-      // On mobile, navigation will happen after successful login
+      // On mobile, navigate after successful login
       if (Platform.OS !== 'web') {
         const redirect = route.params?.redirect;
         if (redirect) {
@@ -83,6 +91,9 @@ export default function LoginScreen() {
         }
       }
     } catch (error: any) {
+      if (__DEV__) {
+        console.error('❌ Google login error in LoginScreen:', error);
+      }
       Alert.alert('Google Login Failed', error.message || 'Failed to sign in with Google');
     } finally {
       setGoogleLoading(false);
