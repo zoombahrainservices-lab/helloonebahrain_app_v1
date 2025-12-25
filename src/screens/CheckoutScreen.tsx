@@ -81,11 +81,39 @@ export default function CheckoutScreen() {
     setSubmitting(true);
     setError(''); // Clear any previous errors
 
+    // Get Supabase session to verify user is logged in
+    const { getSupabase } = await import('../lib/supabase');
+    const supabase = getSupabase();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
+      // User is not logged in
+      if (__DEV__) {
+        console.error('❌ User not authenticated:', sessionError?.message || 'No session');
+      }
+      setSubmitting(false);
+      setError('Please log in to place an order');
+      navigation.navigate('Login', { redirect: 'Checkout' });
+      return;
+    }
+    
+    if (__DEV__) {
+      console.log('✅ User authenticated, proceeding with order creation');
+      console.log('✅ User ID:', session.user.id);
+      console.log('✅ User Email:', session.user.email);
+      console.log('✅ Cart items:', items.length);
+    }
+
     // For COD - handle separately, no payment gateway needed
     if (paymentMethod === 'cod') {
       try {
-        // Create order for COD
-        const orderResponse = await api.post('/api/orders', {
+        // Use Supabase directly to create order (bypasses backend authentication issues)
+        const { createOrder } = await import('../lib/orders-api');
+        
+        const orderData = {
+          userId: session.user.id,
+          userEmail: session.user.email || '',
+          userName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
           items: items.map((item) => ({
             productId: item.productId,
             name: item.name,
@@ -95,14 +123,15 @@ export default function CheckoutScreen() {
           })),
           shippingAddress: formData,
           total: getTotal(),
-          paymentMethod: 'cod',
-          paymentStatus: 'unpaid',
-        });
+          paymentMethod: 'cod' as const,
+          paymentStatus: 'unpaid' as const,
+          orderStatus: 'pending' as const,
+        };
+        
+        const order = await createOrder(orderData);
 
-        const orderId = orderResponse.data.order?._id || orderResponse.data._id || orderResponse.data.id || orderResponse.data.order?.id;
-
-        if (!orderId) {
-          throw new Error('Order ID not received from server');
+        if (!order.id) {
+          throw new Error('Order ID not received');
         }
 
         // COD order created successfully
@@ -122,7 +151,7 @@ export default function CheckoutScreen() {
           console.error('COD Order creation error:', error);
         }
 
-        const errorMessage = error.response?.data?.message || error.message || 'Failed to create order. Please try again.';
+        const errorMessage = error.message || 'Failed to create order. Please try again.';
         setError(errorMessage);
         Alert.alert('Error', errorMessage);
         return;
@@ -131,8 +160,13 @@ export default function CheckoutScreen() {
 
     // For Card or Benefit - create order then payment session
     try {
-      // Create order first
-      const orderResponse = await api.post('/api/orders', {
+      // Use Supabase directly to create order (bypasses backend authentication issues)
+      const { createOrder } = await import('../lib/orders-api');
+      
+      const orderData = {
+        userId: session.user.id,
+        userEmail: session.user.email || '',
+        userName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
         items: items.map((item) => ({
           productId: item.productId,
           name: item.name,
@@ -143,13 +177,15 @@ export default function CheckoutScreen() {
         shippingAddress: formData,
         total: getTotal(),
         paymentMethod: paymentMethod,
-        paymentStatus: 'unpaid',
-      });
-
-      const orderId = orderResponse.data.order?._id || orderResponse.data._id || orderResponse.data.id || orderResponse.data.order?.id;
+        paymentStatus: 'unpaid' as const,
+        orderStatus: 'pending' as const,
+      };
+      
+      const order = await createOrder(orderData);
+      const orderId = order.id;
 
       if (!orderId) {
-        throw new Error('Order ID not received from server');
+        throw new Error('Order ID not received');
       }
 
       // Now try to create payment session (only for Card/Benefit)

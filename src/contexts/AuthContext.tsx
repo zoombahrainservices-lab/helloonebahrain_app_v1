@@ -236,10 +236,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Username login - try backend API (fallback)
       // Note: This might still have CORS issues on web
       try {
-    const response = await api.post('/api/auth/login', { identifier, password });
-    setUser(response.data.user);
-    if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
+        const response = await api.post('/api/auth/login', { identifier, password });
+        setUser(response.data.user);
+        if (response.data.token) {
+          await AsyncStorage.setItem('token', response.data.token);
+          // Also store as backend_token for consistency
+          await AsyncStorage.setItem('backend_token', response.data.token);
         }
       } catch (error: any) {
         // If backend fails (CORS), show helpful error
@@ -256,6 +258,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(response.data.user);
     if (response.data.token) {
       await AsyncStorage.setItem('token', response.data.token);
+      // Also store as backend_token for consistency
+      await AsyncStorage.setItem('backend_token', response.data.token);
     }
   };
 
@@ -561,6 +565,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Store session token
             if (data.session?.access_token) {
               await AsyncStorage.setItem('token', data.session.access_token);
+            }
+            
+            // Automatically create backend session for Google auth users
+            try {
+              const { ensureBackendToken } = await import('../lib/auth-helpers');
+              const backendToken = await ensureBackendToken();
+              
+              if (backendToken) {
+                if (__DEV__) {
+                  console.log('✅ Backend session created for Google user');
+                }
+              } else {
+                if (__DEV__) {
+                  console.log('ℹ️ Backend token creation deferred (will be created on first API call)');
+                }
+              }
+            } catch (importError) {
+              // Ignore import errors
+              if (__DEV__) {
+                console.log('ℹ️ Could not import auth helpers');
+              }
             }
             
             if (__DEV__) {

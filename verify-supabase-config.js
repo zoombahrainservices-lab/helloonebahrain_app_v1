@@ -38,3 +38,9 @@ console.log('   npx expo start --clear');
 console.log('   Press "w" to open in browser');
 console.log('   Click "Continue with Google"\n');
 
+
+
+
+
+
+

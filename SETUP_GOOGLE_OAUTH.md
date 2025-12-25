@@ -80,3 +80,9 @@ The "500 unexpected_failure" error means Supabase Google OAuth is not configured
 
 Once all checked, Google OAuth will work! ✅
 
+
+
+
+
+
+

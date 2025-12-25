@@ -66,12 +66,15 @@ while ($elapsed -lt $maxWait -and -not $ready) {
 }
 
 if (-not $ready) {
-    Write-Host "⚠️  Emulator taking longer than expected. It may still be starting." -ForegroundColor Yellow
-    Write-Host "💡 Check Android Studio Device Manager for status" -ForegroundColor Yellow
+    Write-Host "Warning: Emulator taking longer than expected. It may still be starting." -ForegroundColor Yellow
+    Write-Host "Tip: Check Android Studio Device Manager for status" -ForegroundColor Yellow
 } else {
     Write-Host ""
     Write-Host "✅ Emulator ready! You can now run:" -ForegroundColor Green
     Write-Host "   npx expo run:android" -ForegroundColor Cyan
     Write-Host ""
 }
+
+
+
 

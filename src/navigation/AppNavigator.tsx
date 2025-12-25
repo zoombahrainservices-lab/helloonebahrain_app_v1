@@ -6,7 +6,6 @@ import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Platform, Text, Image, View } from 'react-native';
-import { useCart } from '../contexts/CartContext';
 
 // Conditionally import Ionicons - use simple text icons on web to avoid expo-font issue
 let Ionicons: any;
@@ -75,10 +74,6 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
   const IconComponent = Platform.OS === 'web' ? FallbackIcon : Ionicons;
-  
-  // Hook must be called at top level
-  const { getItemCount } = useCart();
-  const cartCount = getItemCount();
 
   return (
     <Tab.Navigator
@@ -98,47 +93,11 @@ function MainTabs() {
             iconName = 'help-outline';
           }
 
-          const iconElement =
-            Platform.OS === 'web' || !Ionicons ? (
-              <FallbackIcon name={iconName} size={size} color={color} />
-            ) : (
-              <Ionicons name={iconName as any} size={size} color={color} />
-            );
-
-          // Add small badge for cart tab when there are items
-          if (route.name === 'Cart' && cartCount > 0) {
-            return (
-              <View style={{ position: 'relative' }}>
-                {iconElement}
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: -4,
-                    right: -10,
-                    minWidth: 16,
-                    height: 16,
-                    borderRadius: 8,
-                    backgroundColor: '#ef4444',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    paddingHorizontal: 3,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: '#fff',
-                      fontSize: 10,
-                      fontWeight: '700',
-                    }}
-                  >
-                    {cartCount > 9 ? '9+' : cartCount}
-                  </Text>
-                </View>
-              </View>
-            );
+          if (Platform.OS === 'web' || !Ionicons) {
+            return <FallbackIcon name={iconName} size={size} color={color} />;
           }
 
-          return iconElement;
+          return <Ionicons name={iconName as any} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#dc2626',
         tabBarInactiveTintColor: 'gray',
@@ -177,7 +136,6 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="MainTabs"
         screenOptions={{
           headerShown: true,
           headerStyle: {

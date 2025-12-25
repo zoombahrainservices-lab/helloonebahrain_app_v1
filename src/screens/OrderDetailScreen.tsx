@@ -32,8 +32,12 @@ export default function OrderDetailScreen() {
   const fetchOrder = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/orders/${orderId}`);
-      setOrder(response.data.order || response.data);
+      // Use Supabase directly to fetch order
+      const { getOrderById } = await import('../lib/orders-api');
+      const orderData = await getOrderById(orderId);
+      if (orderData) {
+        setOrder(orderData);
+      }
     } catch (error) {
       console.error('Error fetching order:', error);
     } finally {
