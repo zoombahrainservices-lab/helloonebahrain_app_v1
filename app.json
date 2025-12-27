@@ -4,12 +4,12 @@
     "slug": "helloonebh",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/adaptive-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#dc2626"
     },
     "ios": {
       "supportsTablet": true,
@@ -21,9 +21,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#dc2626"
       },
-      "package": "com.helloonebahrain"
+      "package": "com.helloonebahrain",
+      "icon": "./assets/adaptive-icon.png"
     },
     "web": {
       "favicon": "./assets/favicon.png"
