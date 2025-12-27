@@ -33,33 +33,42 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setLoading(true);
         
         if (user?.id) {
-          // User is logged in - load from database
+          // User is logged in - load from Supabase database
           try {
+            if (!cartApi || !cartApi.getCart) {
+              throw new Error('Cart API not available');
+            }
+            
             const cartItems = await cartApi.getCart(user.id);
             setItems(cartItems);
             
-            // Also sync any local cart items
+            // Check if there are any local items to sync (one-time migration)
             const localCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
             if (localCart) {
               const localItems = JSON.parse(localCart);
-              if (localItems.length > 0) {
-                // Sync local cart with server
-                await cartApi.syncCart(user.id, localItems);
-                const syncedCart = await cartApi.getCart(user.id);
-                setItems(syncedCart);
-                // Clear local cart after sync
-                await AsyncStorage.removeItem(CART_STORAGE_KEY);
+              if (localItems.length > 0 && cartApi.syncCart) {
+                try {
+                  // Sync local items to Supabase
+                  await cartApi.syncCart(user.id, localItems);
+                  // Refresh cart after sync
+                  const syncedCart = await cartApi.getCart(user.id);
+                  setItems(syncedCart);
+                  // Clear local cart after successful sync
+                  await AsyncStorage.removeItem(CART_STORAGE_KEY);
+                } catch (syncError) {
+                  // Sync failed, but we have database items, so continue
+                  if (__DEV__) {
+                    console.log('Cart sync failed, keeping database items');
+                  }
+                }
               }
             }
           } catch (error) {
             if (__DEV__) {
               console.error('Error loading cart from database:', error);
             }
-            // Fallback to local storage
-            const localCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
-            if (localCart) {
-              setItems(JSON.parse(localCart));
-            }
+            // On error, set empty cart
+            setItems([]);
           }
         } else {
           // User not logged in - load from local storage
@@ -95,7 +104,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addItem = async (product: Product, quantity: number) => {
     try {
       if (user?.id) {
-        // User logged in - save to database
+        // User logged in - save to Supabase database
         await cartApi.addItem(user.id, product._id, quantity);
         // Refresh cart from database
         const updatedCart = await cartApi.getCart(user.id);
@@ -165,10 +174,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const removeItem = async (productId: string) => {
     try {
       if (user?.id) {
+        // Remove from Supabase database
         await cartApi.removeItem(user.id, productId);
+        // Refresh cart from database
         const updatedCart = await cartApi.getCart(user.id);
         setItems(updatedCart);
       } else {
+        // Not logged in - remove from local storage
         setItems((prevItems) => prevItems.filter((item) => item.productId !== productId));
       }
     } catch (error: any) {
@@ -182,7 +194,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const updateQuantity = async (productId: string, quantity: number) => {
     try {
       if (user?.id) {
+        // Update in Supabase database
         await cartApi.updateQuantity(user.id, productId, quantity);
+        // Refresh cart from database
         const updatedCart = await cartApi.getCart(user.id);
         setItems(updatedCart);
       } else {
@@ -217,11 +231,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const clearCart = async () => {
     try {
       if (user?.id) {
+        // Clear from Supabase database
         await cartApi.clearCart(user.id);
-        setItems([]);
-      } else {
-        setItems([]);
       }
+      // Clear local state
+      setItems([]);
     } catch (error: any) {
       if (__DEV__) {
         console.error('Error clearing cart:', error);

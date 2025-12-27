@@ -8,9 +8,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { api } from '../lib/api';
 import { Order } from '../lib/types';
 import { formatPrice } from '../lib/currency';
+import { ordersApi } from '../lib/orders-api';
+import { useAuth } from '../contexts/AuthContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
 type OrderDetailRouteProp = RouteProp<RootStackParamList, 'OrderDetail'>;
@@ -18,6 +19,7 @@ type OrderDetailRouteProp = RouteProp<RootStackParamList, 'OrderDetail'>;
 export default function OrderDetailScreen() {
   const route = useRoute<OrderDetailRouteProp>();
   const { orderId } = route.params;
+  const { user } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,9 +34,13 @@ export default function OrderDetailScreen() {
   const fetchOrder = async () => {
     try {
       setLoading(true);
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      
       // Use Supabase directly to fetch order
-      const { getOrderById } = await import('../lib/orders-api');
-      const orderData = await getOrderById(orderId);
+      const orderData = await ordersApi.getOrderById(orderId, user.id);
       if (orderData) {
         setOrder(orderData);
       }

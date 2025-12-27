@@ -1,257 +1,274 @@
 import { getSupabase } from './supabase';
-import { Order, ShippingAddress } from './types';
-import { ensureUserExists } from './user-helpers';
+import { Order } from './types';
 
-/**
- * Orders API - Full CRUD operations for orders
- * Stores orders in Supabase database
- */
+export const ordersApi = {
+  /**
+   * Get user's orders from Supabase
+   */
+  async getUserOrders(userId: string): Promise<Order[]> {
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-interface CreateOrderData {
-  userId: string;
-  userEmail: string;
-  userName: string;
-  items: Array<{
-    productId: string;
-    name: string;
-    price: number;
-    quantity: number;
-    image: string;
-  }>;
-  shippingAddress: ShippingAddress;
-  total: number;
-  paymentMethod: 'cod' | 'card' | 'benefit';
-  paymentStatus: 'unpaid' | 'paid';
-  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-}
+      if (error) {
+        if (__DEV__) {
+          console.error('Error fetching orders from Supabase:', error);
+        }
+        throw error;
+      }
 
-// Transform database order to frontend format
-const transformOrder = (dbOrder: any, orderItems?: any[]): Order => {
-  // If orderItems are provided, use them; otherwise try to get from dbOrder.items
-  const items = orderItems || dbOrder.items || [];
-  
-  return {
-    _id: dbOrder.id || dbOrder._id,
-    id: dbOrder.id || dbOrder._id,
-    user: dbOrder.user_id || dbOrder.user,
-    items: items.map((item: any) => ({
-      product: item.product_id || item.product,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      image: item.image,
-    })),
-    total: dbOrder.total || 0,
-    status: dbOrder.status || dbOrder.order_status || 'pending',
-    paymentStatus: dbOrder.payment_status || dbOrder.paymentStatus || 'unpaid',
-    payment_status: dbOrder.payment_status || dbOrder.paymentStatus || 'unpaid',
-    shippingAddress: dbOrder.shipping_address || dbOrder.shippingAddress || {
-      fullName: '',
-      addressLine1: '',
-      city: '',
-      country: '',
-      postalCode: '',
-      phone: '',
-    },
-    createdAt: dbOrder.created_at || dbOrder.createdAt || new Date().toISOString(),
-    updatedAt: dbOrder.updated_at || dbOrder.updatedAt || new Date().toISOString(),
-    created_at: dbOrder.created_at || dbOrder.createdAt || new Date().toISOString(),
-  };
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Transform Supabase data to Order format
+      return data.map((order: any) => ({
+        _id: order.id,
+        id: order.id,
+        user: order.user_id,
+        items: (order.order_items || []).map((item: any) => ({
+          product: item.product_id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        total: parseFloat(order.total?.toString() || '0'),
+        status: order.status,
+        paymentStatus: order.payment_status || order.paymentStatus,
+        shippingAddress: order.shipping_address || order.shippingAddress,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+      }));
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error fetching orders:', error);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Get order by ID from Supabase
+   */
+  async getOrderById(orderId: string, userId: string): Promise<Order | null> {
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('id', orderId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (__DEV__) {
+          console.error('Error fetching order from Supabase:', error);
+        }
+        throw error;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      // Transform Supabase data to Order format
+      return {
+        _id: data.id,
+        id: data.id,
+        user: data.user_id,
+        items: (data.order_items || []).map((item: any) => ({
+          product: item.product_id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        total: parseFloat(data.total?.toString() || '0'),
+        status: data.status,
+        paymentStatus: data.payment_status || data.paymentStatus,
+        shippingAddress: data.shipping_address || data.shippingAddress,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error fetching order:', error);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Create order in Supabase
+   */
+  async createOrder(orderData: {
+    userId: string;
+    userEmail?: string;
+    userName?: string;
+    items: Array<{
+      productId: string;
+      name: string;
+      price: number;
+      quantity: number;
+      image: string;
+    }>;
+    shippingAddress: any;
+    total: number;
+    paymentMethod: string;
+    paymentStatus?: string;
+    orderStatus?: string;
+  }): Promise<Order> {
+    try {
+      const supabase = getSupabase();
+      
+      // First, verify products and calculate total
+      let calculatedTotal = 0;
+      const orderItems = [];
+
+      for (const item of orderData.items) {
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', item.productId)
+          .single();
+
+        if (productError || !product) {
+          throw new Error(`Product not found: ${item.productId}`);
+        }
+
+        if (!product.in_stock || product.stock_quantity < item.quantity) {
+          throw new Error(`Insufficient stock for ${product.name}`);
+        }
+
+        orderItems.push({
+          product_id: product.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        });
+
+        calculatedTotal += parseFloat(product.price.toString()) * item.quantity;
+      }
+
+      // Create order
+      // Note: user_id must be a valid Supabase auth user ID
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: orderData.userId,
+          total: calculatedTotal,
+          status: orderData.orderStatus || 'pending',
+          payment_status: orderData.paymentStatus || 'unpaid',
+          shipping_address: orderData.shippingAddress,
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        if (__DEV__) {
+          console.error('Error creating order in Supabase:', orderError);
+          console.error('User ID used:', orderData.userId);
+        }
+        
+        // If error is about foreign key constraint (user_id doesn't exist in auth.users)
+        if (orderError.message?.includes('foreign key') || orderError.message?.includes('user_id') || orderError.code === '23503') {
+          throw new Error('User account not found in database. Please log in again or contact support.');
+        }
+        
+        throw orderError;
+      }
+
+      // Create order items
+      const orderItemsWithOrderId = orderItems.map(item => ({
+        ...item,
+        order_id: order.id,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsWithOrderId);
+
+      if (itemsError) {
+        if (__DEV__) {
+          console.error('Error creating order items:', itemsError);
+        }
+        throw itemsError;
+      }
+
+      // Update stock quantities
+      for (const item of orderItems) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('stock_quantity')
+          .eq('id', item.product_id)
+          .single();
+
+        if (product) {
+          await supabase
+            .from('products')
+            .update({ stock_quantity: product.stock_quantity - item.quantity })
+            .eq('id', item.product_id);
+        }
+      }
+
+      // Fetch complete order with items
+      const { data: completeOrder, error: fetchError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('id', order.id)
+        .single();
+
+      if (fetchError) {
+        if (__DEV__) {
+          console.error('Error fetching complete order:', fetchError);
+        }
+        throw fetchError;
+      }
+
+      // Transform to match expected format
+      return {
+        _id: completeOrder.id,
+        id: completeOrder.id,
+        user: completeOrder.user_id,
+        items: (completeOrder.order_items || []).map((item: any) => ({
+          product: item.product_id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        total: parseFloat(completeOrder.total?.toString() || '0'),
+        status: completeOrder.status,
+        paymentStatus: completeOrder.payment_status,
+        shippingAddress: completeOrder.shipping_address,
+        createdAt: completeOrder.created_at,
+        updatedAt: completeOrder.updated_at,
+      };
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error creating order:', error);
+      }
+      throw error;
+    }
+  },
 };
 
-/**
- * Create a new order
- */
-export async function createOrder(orderData: CreateOrderData): Promise<Order> {
-  const supabase = getSupabase();
-
-  // Ensure user exists in users table (required for foreign key constraint)
-  await ensureUserExists(
-    orderData.userId,
-    orderData.userEmail,
-    orderData.userName
-  );
-
-  // First, create the order without items (items go in order_items table)
-  const { data: orderData_result, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      user_id: orderData.userId,
-      shipping_address: orderData.shippingAddress,
-      total: orderData.total,
-      payment_method: orderData.paymentMethod, // Now using payment_method column
-      payment_status: orderData.paymentStatus,
-      status: orderData.orderStatus,
-    })
-    .select()
-    .single();
-
-  if (orderError) {
-    if (__DEV__) {
-      console.error('Error creating order:', orderError);
-    }
-    throw new Error(`Failed to create order: ${orderError.message}`);
-  }
-
-  if (!orderData_result?.id) {
-    throw new Error('Order created but no ID returned');
-  }
-
-  const orderId = orderData_result.id;
-
-  // Now insert items into orderitems table
-  const orderItems = orderData.items.map(item => ({
-    order_id: orderId,
-    product_id: item.productId,
-    name: item.name,
-    price: item.price,
-    quantity: item.quantity,
-    image: item.image,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems);
-
-  if (itemsError) {
-    if (__DEV__) {
-      console.error('Error creating order items:', itemsError);
-    }
-    // Try to delete the order if items insertion failed
-    await supabase.from('orders').delete().eq('id', orderId);
-    throw new Error(`Failed to create order items: ${itemsError.message}`);
-  }
-
-  // Fetch the complete order with items
-  return await getOrderById(orderId) || transformOrder(orderData_result);
-}
-
-/**
- * Get order by ID
- */
-export async function getOrderById(orderId: string): Promise<Order | null> {
-  const supabase = getSupabase();
-
-  // Fetch the order
-  const { data: orderData, error: orderError } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('id', orderId)
-    .single();
-
-  if (orderError) {
-    if (__DEV__) {
-      console.error('Error fetching order:', orderError);
-    }
-    // Return null if order not found
-    if (orderError.code === 'PGRST116') {
-      return null;
-    }
-    throw new Error(`Failed to fetch order: ${orderError.message}`);
-  }
-
-  if (!orderData) {
-    return null;
-  }
-
-  // Fetch order items
-  const { data: itemsData, error: itemsError } = await supabase
-    .from('order_items')
-    .select('*')
-    .eq('order_id', orderId);
-
-  if (itemsError) {
-    if (__DEV__) {
-      console.error('Error fetching order items:', itemsError);
-    }
-    // If items can't be fetched, return order without items
-    return transformOrder(orderData, []);
-  }
-
-  return transformOrder(orderData, itemsData || []);
-}
-
-/**
- * Get all orders for the current user
- * Works with both Supabase auth users and backend API users
- */
-export async function getUserOrders(userId?: string): Promise<Order[]> {
-  const supabase = getSupabase();
-
-  let targetUserId: string | null = null;
-
-  // If userId is provided, use it (for backend API users)
-  if (userId) {
-    targetUserId = userId;
-    if (__DEV__) {
-      console.log('📦 Fetching orders for user ID:', userId);
-    }
-  } else {
-    // Try to get from Supabase session (for Supabase auth users)
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session?.user) {
-      targetUserId = session.user.id;
-      if (__DEV__) {
-        console.log('📦 Fetching orders for Supabase user:', session.user.id);
-      }
-    } else {
-      if (__DEV__) {
-        console.warn('⚠️ No user session found for getUserOrders and no userId provided');
-      }
-      return [];
-    }
-  }
-
-  if (!targetUserId) {
-    if (__DEV__) {
-      console.warn('⚠️ No user ID available for getUserOrders');
-    }
-    return [];
-  }
-
-  // Fetch orders
-  const { data: ordersData, error: ordersError } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('user_id', targetUserId)
-    .order('created_at', { ascending: false });
-
-  if (ordersError) {
-    if (__DEV__) {
-      console.error('Error fetching user orders:', ordersError);
-    }
-    throw new Error(`Failed to fetch orders: ${ordersError.message}`);
-  }
-
-  if (!ordersData || ordersData.length === 0) {
-    return [];
-  }
-
-  // Fetch all order items for these orders
-  const orderIds = ordersData.map(order => order.id);
-  const { data: itemsData, error: itemsError } = await supabase
-    .from('order_items')
-    .select('*')
-    .in('order_id', orderIds);
-
-  if (itemsError) {
-    if (__DEV__) {
-      console.error('Error fetching order items:', itemsError);
-    }
-    // Return orders without items if items can't be fetched
-    return ordersData.map(order => transformOrder(order, []));
-  }
-
-  // Group items by order_id
-  const itemsByOrderId: Record<string, any[]> = {};
-  (itemsData || []).forEach(item => {
-    if (!itemsByOrderId[item.order_id]) {
-      itemsByOrderId[item.order_id] = [];
-    }
-    itemsByOrderId[item.order_id].push(item);
-  });
-
-  // Transform orders with their items
-  return ordersData.map(order => transformOrder(order, itemsByOrderId[order.id] || []));
-}
+// Export functions as standalone for backward compatibility
+export const createOrder = ordersApi.createOrder.bind(ordersApi);
+export const getOrderById = ordersApi.getOrderById.bind(ordersApi);
+export const getUserOrders = ordersApi.getUserOrders.bind(ordersApi);

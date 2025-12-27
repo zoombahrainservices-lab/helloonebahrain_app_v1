@@ -19,6 +19,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { formatPrice } from '../lib/currency';
 import { api } from '../lib/api';
+import { createOrder } from '../lib/orders-api';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import * as Linking from 'expo-linking';
 
@@ -44,18 +45,42 @@ export default function CheckoutScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'benefit' | 'cod' | 'card'>('cod');
+  const [orderPlaced, setOrderPlaced] = useState(false); // Track if order was successfully placed
 
   useEffect(() => {
+    // Only redirect if we're sure user is not logged in (after loading completes)
     if (!authLoading && !user) {
-      navigation.navigate('Login', { redirect: 'Checkout' });
+      // Double check with Supabase session before redirecting (for Google auth users)
+      const checkSession = async () => {
+        try {
+          const { getSupabase } = await import('../lib/supabase');
+          const supabase = getSupabase();
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          // Only redirect if neither user nor session exists
+          if (!session?.user) {
+            navigation.navigate('Login', { redirect: 'Checkout' });
+          }
+        } catch (error) {
+          // If check fails, redirect to login
+          navigation.navigate('Login', { redirect: 'Checkout' });
+        }
+      };
+      checkSession();
     }
   }, [user, authLoading, navigation]);
 
   useEffect(() => {
-    if (items.length === 0) {
-      navigation.goBack();
+    // Only go back if cart is empty AND we're not currently submitting an order
+    // AND we haven't just placed an order (prevent redirect after successful order)
+    if (items.length === 0 && !submitting && !error && !orderPlaced) {
+      // Small delay to prevent immediate redirect during order processing
+      const timer = setTimeout(() => {
+        navigation.goBack();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [items, navigation]);
+  }, [items, navigation, submitting, error, orderPlaced]);
 
   const handleSubmit = async () => {
     setError('');
@@ -81,60 +106,59 @@ export default function CheckoutScreen() {
     setSubmitting(true);
     setError(''); // Clear any previous errors
 
-    // Check if user is logged in (from AuthContext)
-    if (!user || !user.id) {
+    // Get user ID - prefer AuthContext user, fallback to Supabase session
+    let userId: string | null = null;
+    let userEmail = '';
+    let userName = 'User';
+    
+    // First, try to get user from AuthContext (works for both auth methods)
+    if (user?.id) {
+      userId = user.id;
+      userEmail = user.email || '';
+      userName = user.name || 'User';
+      
       if (__DEV__) {
-        console.error('❌ User not authenticated: No user in AuthContext');
+        console.log('✅ Using user from AuthContext:', userId);
       }
+    }
+    
+    // Also check Supabase session (for Google auth users or if AuthContext user not available)
+    const { getSupabase } = await import('../lib/supabase');
+    const supabase = getSupabase();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      // If we have Supabase session, prefer it (ensures valid Supabase user ID)
+      userId = session.user.id;
+      userEmail = session.user.email || userEmail || '';
+      userName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || userName || 'User';
+      
+      if (__DEV__) {
+        console.log('✅ Using user from Supabase session:', userId);
+      }
+    }
+    
+    // If no user ID found, redirect to login
+    if (!userId) {
       setSubmitting(false);
-      setError('Please log in to place an order');
+      if (__DEV__) {
+        console.log('❌ No user ID found, redirecting to login');
+      }
+      Alert.alert('Authentication Required', 'Please log in to place an order.');
       navigation.navigate('Login', { redirect: 'Checkout' });
       return;
     }
-
-    // Get Supabase session (for Supabase auth users) or use user from AuthContext
-    const { getSupabase } = await import('../lib/supabase');
-    const supabase = getSupabase();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    // Determine user ID and email
-    let userId: string;
-    let userEmail: string;
-    let userName: string;
-    
-    if (session?.user) {
-      // User logged in via Supabase (Google auth or Supabase email/password)
-      userId = session.user.id;
-      userEmail = session.user.email || user.email || '';
-      userName = session.user.user_metadata?.full_name || user.name || userEmail.split('@')[0] || 'User';
-      
-      if (__DEV__) {
-        console.log('✅ User authenticated via Supabase, proceeding with order creation');
-        console.log('✅ User ID:', userId);
-        console.log('✅ User Email:', userEmail);
-        console.log('✅ Cart items:', items.length);
-      }
-    } else {
-      // User logged in via backend API - use AuthContext user
-      userId = user.id;
-      userEmail = user.email || '';
-      userName = user.name || userEmail.split('@')[0] || 'User';
-      
-      if (__DEV__) {
-        console.log('✅ User authenticated via backend API, proceeding with order creation');
-        console.log('✅ User ID:', userId);
-        console.log('✅ User Email:', userEmail);
-        console.log('✅ Cart items:', items.length);
-        console.log('⚠️ Note: User will be created in users table if needed');
-      }
+    if (__DEV__) {
+      console.log('✅ User authenticated, proceeding with order creation');
+      console.log('✅ User ID:', userId);
+      console.log('✅ User Email:', userEmail);
     }
 
     // For COD - handle separately, no payment gateway needed
     if (paymentMethod === 'cod') {
       try {
-        // Use Supabase directly to create order (bypasses backend authentication issues)
-        const { createOrder } = await import('../lib/orders-api');
-        
+        // Use Supabase directly to create order
         const orderData = {
           userId: userId,
           userEmail: userEmail,
@@ -160,13 +184,15 @@ export default function CheckoutScreen() {
         }
 
         // COD order created successfully
-        clearCart();
         setSubmitting(false);
+        setOrderPlaced(true); // Mark order as placed to prevent navigation back
         showToast('Order placed successfully! You will pay when you receive your order.', 'success');
-        // Navigate after toast is shown
+        // Clear cart first, then navigate to Home page
+        clearCart();
+        // Use replace to prevent going back to checkout
         setTimeout(() => {
-          navigation.navigate('MainTabs', { screen: 'Profile' });
-        }, 1000);
+          navigation.navigate('MainTabs', { screen: 'Home' });
+        }, 500);
         return; // Exit early for COD
       } catch (error: any) {
         // Only handle order creation errors for COD
@@ -185,13 +211,11 @@ export default function CheckoutScreen() {
 
     // For Card or Benefit - create order then payment session
     try {
-      // Use Supabase directly to create order (bypasses backend authentication issues)
-      const { createOrder } = await import('../lib/orders-api');
-      
-        const orderData = {
-          userId: userId,
-          userEmail: userEmail,
-          userName: userName,
+      // Use Supabase directly to create order
+      const orderData = {
+        userId: userId,
+        userEmail: userEmail,
+        userName: userName,
         items: items.map((item) => ({
           productId: item.productId,
           name: item.name,
@@ -228,24 +252,36 @@ export default function CheckoutScreen() {
           const canOpen = await Linking.canOpenURL(paymentUrl);
           if (canOpen) {
             await Linking.openURL(paymentUrl);
-            clearCart();
             setSubmitting(false);
-            navigation.navigate('MainTabs', { screen: 'Profile' });
+            setOrderPlaced(true); // Mark order as placed to prevent navigation back
+            showToast('Order placed successfully! Redirecting to payment...', 'success');
+            // Clear cart first, then navigate to Home page
+            clearCart();
+            setTimeout(() => {
+              navigation.navigate('MainTabs', { screen: 'Home' });
+            }, 500);
             return;
           } else {
             throw new Error('Cannot open payment URL');
           }
         } else {
           // Payment gateway not configured, but order is created
-          clearCart();
           setSubmitting(false);
+          setSubmitting(false);
+          setOrderPlaced(true); // Mark order as placed to prevent navigation back
+          showToast('Order placed successfully! Payment gateway is not configured.', 'success');
           Alert.alert(
             'Order Created',
             'Your order has been created. Payment gateway is not configured. Please contact support to complete payment.',
             [
               {
                 text: 'OK',
-                onPress: () => navigation.navigate('MainTabs', { screen: 'Profile' }),
+                onPress: () => {
+                  clearCart();
+                  setTimeout(() => {
+                    navigation.navigate('MainTabs', { screen: 'Home' });
+                  }, 500);
+                },
               },
             ]
           );
@@ -262,6 +298,9 @@ export default function CheckoutScreen() {
 
         // Show error for payment gateway issues
         setError(paymentErrorMessage);
+        setSubmitting(false);
+        setOrderPlaced(true); // Mark order as placed to prevent navigation back
+        showToast('Order placed successfully! Payment gateway issue occurred.', 'success');
         Alert.alert(
           'Payment Gateway Error',
           `Your order has been created, but there was an issue with the payment gateway: ${paymentErrorMessage}. Please contact support to complete payment.`,
@@ -270,7 +309,9 @@ export default function CheckoutScreen() {
               text: 'OK',
               onPress: () => {
                 clearCart();
-                navigation.navigate('MainTabs', { screen: 'Profile' });
+                setTimeout(() => {
+                  navigation.navigate('MainTabs', { screen: 'Home' });
+                }, 500);
               },
             },
           ]

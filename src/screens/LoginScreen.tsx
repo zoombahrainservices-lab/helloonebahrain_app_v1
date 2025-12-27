@@ -14,8 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth } from '../contexts/AuthContext';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useAuth } from '@/contexts/AuthContext';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 
 type LoginRouteProp = RouteProp<RootStackParamList, 'Login'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -55,11 +55,18 @@ export default function LoginScreen() {
         navigation.navigate('MainTabs', { screen: 'Home' });
       }
     } catch (error: any) {
-      const errorMessage = error.message || error.response?.data?.message || 'Invalid credentials. Please check your email and password.';
-      Alert.alert('Login Failed', errorMessage);
-      if (__DEV__) {
-        console.error('Login error:', error);
+      // Handle different error formats (Supabase, axios, etc.)
+      let errorMessage = 'Invalid credentials';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
       }
+      
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -69,32 +76,30 @@ export default function LoginScreen() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
-      
-      // Wait a brief moment to ensure auth state is updated
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // On web, redirect will happen automatically
-      // On mobile, navigate after successful login
-      if (Platform.OS !== 'web') {
-        const redirect = route.params?.redirect;
-        if (redirect) {
-          if (redirect.startsWith('ProductDetail:')) {
-            const slug = redirect.replace('ProductDetail:', '');
-            navigation.navigate('ProductDetail', { slug });
-          } else if (redirect === 'Cart' || redirect === 'Checkout') {
-            navigation.navigate('MainTabs', { screen: 'Cart' });
-          } else {
-            navigation.navigate('MainTabs', { screen: 'Home' });
-          }
+      // Navigate based on redirect or default to home
+      const redirect = route.params?.redirect;
+      if (redirect) {
+        if (redirect.startsWith('ProductDetail:')) {
+          const slug = redirect.replace('ProductDetail:', '');
+          navigation.navigate('ProductDetail', { slug });
+        } else if (redirect === 'Cart' || redirect === 'Checkout') {
+          navigation.navigate('MainTabs', { screen: 'Cart' });
         } else {
           navigation.navigate('MainTabs', { screen: 'Home' });
         }
+      } else {
+        navigation.navigate('MainTabs', { screen: 'Home' });
       }
     } catch (error: any) {
-      if (__DEV__) {
-        console.error('❌ Google login error in LoginScreen:', error);
+      let errorMessage = 'Google login failed';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
       }
-      Alert.alert('Google Login Failed', error.message || 'Failed to sign in with Google');
+      
+      Alert.alert('Google Login Failed', errorMessage);
     } finally {
       setGoogleLoading(false);
     }
@@ -148,7 +153,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || googleLoading}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
@@ -172,7 +177,7 @@ export default function LoginScreen() {
                 <ActivityIndicator color="#4285F4" />
               ) : (
                 <>
-                  <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.googleIcon} />
+                  <Ionicons name="logo-google" size={20} color="#4285F4" />
                   <Text style={styles.googleButtonText}>Continue with Google</Text>
                 </>
               )}
@@ -322,13 +327,10 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     paddingVertical: 16,
     borderRadius: 8,
-    marginBottom: 16,
+    gap: 8,
   },
   googleButtonDisabled: {
     opacity: 0.5,
-  },
-  googleIcon: {
-    marginRight: 12,
   },
   googleButtonText: {
     color: '#374151',

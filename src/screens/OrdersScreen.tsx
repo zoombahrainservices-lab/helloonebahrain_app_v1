@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { api } from '../lib/api';
-import { Order } from '../lib/types';
-import { formatPrice } from '../lib/currency';
-import { useAuth } from '../contexts/AuthContext';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { Order } from '@/lib/types';
+import { formatPrice } from '@/lib/currency';
+import { useAuth } from '@/contexts/AuthContext';
+import { ordersApi } from '@/lib/orders-api';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -34,15 +34,14 @@ export default function OrdersScreen() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      // Use Supabase directly to fetch orders
-      // Pass user.id so it works for both Supabase and backend API users
-      const { getUserOrders } = await import('../lib/orders-api');
-      const userOrders = await getUserOrders(user?.id);
-      setOrders(userOrders);
-      
-      if (__DEV__) {
-        console.log('📦 Fetched orders:', userOrders.length);
+      if (!user?.id) {
+        setOrders([]);
+        return;
       }
+      
+      // Use Supabase directly instead of backend API
+      const userOrders = await ordersApi.getUserOrders(user.id);
+      setOrders(userOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       setOrders([]);

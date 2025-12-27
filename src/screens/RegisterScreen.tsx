@@ -21,7 +21,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function RegisterScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,6 +30,7 @@ export default function RegisterScreen() {
     phone: '',
   });
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleRegister = async () => {
@@ -56,6 +57,31 @@ export default function RegisterScreen() {
       Alert.alert('Registration Failed', error.response?.data?.message || 'Failed to create account');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+      Alert.alert('Success', 'Logged in with Google!', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('MainTabs', { screen: 'Home' }),
+        },
+      ]);
+    } catch (error: any) {
+      let errorMessage = 'Google login failed';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      Alert.alert('Google Login Failed', errorMessage);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -125,12 +151,33 @@ export default function RegisterScreen() {
             <TouchableOpacity
               style={[styles.registerButton, loading && styles.registerButtonDisabled]}
               onPress={handleRegister}
-              disabled={loading}
+              disabled={loading || googleLoading}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.registerButtonText}>Register</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.googleButton, (loading || googleLoading) && styles.googleButtonDisabled]}
+              onPress={handleGoogleLogin}
+              disabled={loading || googleLoading}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color="#4285F4" />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={20} color="#4285F4" />
+                  <Text style={styles.googleButtonText}>Continue with Google</Text>
+                </>
               )}
             </TouchableOpacity>
 
@@ -251,6 +298,41 @@ const styles = StyleSheet.create({
   loginLink: {
     fontSize: 14,
     color: '#dc2626',
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingVertical: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  googleButtonDisabled: {
+    opacity: 0.5,
+  },
+  googleButtonText: {
+    color: '#374151',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
