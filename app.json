@@ -4,27 +4,28 @@
     "slug": "helloonebh",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/adaptive-icon.png",
+    "icon": "./assets/logos/playstore.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/adaptive-icon.png",
+      "image": "./assets/logos/playstore.png",
       "resizeMode": "contain",
       "backgroundColor": "#dc2626"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.helloonebahrain",
+      "icon": "./assets/logos/appstore.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logos/playstore.png",
         "backgroundColor": "#dc2626"
       },
       "package": "com.helloonebahrain",
-      "icon": "./assets/adaptive-icon.png"
+      "icon": "./assets/logos/playstore.png"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -43,7 +44,8 @@
     "plugins": [
       "expo-font",
       "expo-web-browser",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-asset"
     ],
     "owner": "zoombh1"
   }
