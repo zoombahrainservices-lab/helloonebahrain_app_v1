@@ -86,3 +86,15 @@ cd android; ./gradlew assembleRelease; cd ..
 
 **You MUST have a valid PNG file** - the current files are corrupted and won't work!
 
+
+
+
+
+
+
+
+
+
+
+
+

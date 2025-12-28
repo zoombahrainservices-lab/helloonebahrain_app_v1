@@ -92,3 +92,15 @@ If you have a valid 1024x1024 PNG:
 
 **OR** use EAS Build which handles everything automatically!
 
+
+
+
+
+
+
+
+
+
+
+
+

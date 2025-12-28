@@ -66,3 +66,15 @@ After regenerating resources, verify:
 
 Expo generates native Android resources (mipmap folders) from `app.json` during `prebuild`. When you change the icon in `app.json` but don't regenerate, the old icon files remain in the native resources, causing the icon not to show.
 
+
+
+
+
+
+
+
+
+
+
+
+

@@ -79,3 +79,16 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON cart_items TO anon;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+

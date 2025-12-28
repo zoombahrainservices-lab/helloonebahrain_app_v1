@@ -1,0 +1,28 @@
+# Exclude native folders - EAS will regenerate these
+/android
+/ios
+
+# Exclude build artifacts
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+
+# Exclude node_modules (already handled by EAS)
+node_modules/
+
+# Exclude local development files
+*.log
+.DS_Store
+
+
+
+
+
+
+
+
+
+
+
+

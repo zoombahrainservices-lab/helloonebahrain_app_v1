@@ -60,3 +60,15 @@ After regenerating, check:
 Get-ChildItem "android\app\src\main\res\mipmap-*" -Recurse -Filter "*.webp" | Select-Object FullName, LastWriteTime
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+

@@ -142,3 +142,15 @@ Get-Item "android\app\build\outputs\apk\release\app-release.apk"
 
 **Next Steps**: Close Android Studio, then run the regeneration command above.
 
+
+
+
+
+
+
+
+
+
+
+
+

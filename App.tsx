@@ -12,7 +12,7 @@ export default function App() {
       <LanguageProvider>
         <CartProvider>
           <ToastProvider>
-            <StatusBar style="auto" />
+      <StatusBar style="auto" />
             <AppNavigator />
           </ToastProvider>
         </CartProvider>

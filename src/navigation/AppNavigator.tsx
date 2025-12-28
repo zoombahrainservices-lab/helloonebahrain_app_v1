@@ -46,6 +46,8 @@ import RegisterScreen from '../screens/RegisterScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 
 // Types
 export type MainTabParamList = {
@@ -63,6 +65,8 @@ export type RootStackParamList = {
   Register: undefined;
   OrderDetail: { orderId: string };
   Orders: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
 };
 
 export type MainTabNavigationProp = CompositeNavigationProp<
@@ -230,6 +234,28 @@ export default function AppNavigator() {
           component={OrdersScreen}
           options={{ 
             title: 'My Orders',
+            headerStyle: {
+              backgroundColor: '#dc2626',
+            },
+            headerTintColor: '#ffffff',
+          }}
+        />
+        <Stack.Screen
+          name="PrivacyPolicy"
+          component={PrivacyPolicyScreen}
+          options={{ 
+            title: 'Privacy Policy',
+            headerStyle: {
+              backgroundColor: '#dc2626',
+            },
+            headerTintColor: '#ffffff',
+          }}
+        />
+        <Stack.Screen
+          name="TermsOfService"
+          component={TermsOfServiceScreen}
+          options={{ 
+            title: 'Terms of Service',
             headerStyle: {
               backgroundColor: '#dc2626',
             },

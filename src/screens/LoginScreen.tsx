@@ -189,6 +189,17 @@ export default function LoginScreen() {
                 <Text style={styles.registerLink}>Register</Text>
               </TouchableOpacity>
             </View>
+
+            <View style={styles.policyLinks}>
+              <Text style={styles.policyText}>By continuing, you agree to our </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')}>
+                <Text style={styles.policyLink}>Terms of Service</Text>
+              </TouchableOpacity>
+              <Text style={styles.policyText}> and </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
+                <Text style={styles.policyLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -336,6 +347,23 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontSize: 16,
     fontWeight: '600',
+  },
+  policyLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+  policyText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  policyLink: {
+    fontSize: 12,
+    color: '#dc2626',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

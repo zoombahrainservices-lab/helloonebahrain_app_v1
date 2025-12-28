@@ -43,3 +43,15 @@ The new APK will have:
 
 The logo image files (`icon.png`, `adaptive-icon.png`, `splash.png`) in the `assets` folder should contain your white logo. If you need to update these logo images, replace them in the `assets` folder and run `npx expo prebuild` (when android folder is not locked).
 
+
+
+
+
+
+
+
+
+
+
+
+

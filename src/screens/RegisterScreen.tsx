@@ -32,6 +32,7 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleRegister = async () => {
     if (!formData.name || !formData.email || !formData.password || !formData.phone) {
@@ -41,6 +42,11 @@ export default function RegisterScreen() {
 
     if (formData.password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    if (!acceptedTerms) {
+      Alert.alert('Error', 'Please accept the Terms of Service and Privacy Policy to continue');
       return;
     }
 
@@ -148,10 +154,38 @@ export default function RegisterScreen() {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.termsContainer}>
+              <View style={styles.checkboxContainer}>
+                <TouchableOpacity
+                  onPress={() => setAcceptedTerms(!acceptedTerms)}
+                  activeOpacity={0.7}
+                  style={styles.checkboxWrapper}
+                >
+                  <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+                    {acceptedTerms && <Ionicons name="checkmark" size={16} color="#fff" />}
+                  </View>
+                </TouchableOpacity>
+                <View style={styles.termsTextContainer}>
+                  <Text style={styles.termsText}>
+                    I agree to the{' '}
+                  </Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')}>
+                    <Text style={styles.termsLink}>Terms of Service</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.termsText}>
+                    {' '}and{' '}
+                  </Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
+                    <Text style={styles.termsLink}>Privacy Policy</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
             <TouchableOpacity
-              style={[styles.registerButton, loading && styles.registerButtonDisabled]}
+              style={[styles.registerButton, (loading || googleLoading || !acceptedTerms) && styles.registerButtonDisabled]}
               onPress={handleRegister}
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || !acceptedTerms}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
@@ -334,6 +368,50 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontSize: 16,
     fontWeight: '600',
+  },
+  termsContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkboxWrapper: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#dc2626',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  checkboxChecked: {
+    backgroundColor: '#dc2626',
+    borderColor: '#dc2626',
+  },
+  termsTextContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  termsText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#374151',
+  },
+  termsLink: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#dc2626',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

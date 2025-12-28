@@ -63,7 +63,7 @@ export default function CheckoutScreen() {
           }
         } catch (error) {
           // If check fails, redirect to login
-          navigation.navigate('Login', { redirect: 'Checkout' });
+      navigation.navigate('Login', { redirect: 'Checkout' });
         }
       };
       checkSession();
@@ -76,7 +76,7 @@ export default function CheckoutScreen() {
     if (items.length === 0 && !submitting && !error && !orderPlaced) {
       // Small delay to prevent immediate redirect during order processing
       const timer = setTimeout(() => {
-        navigation.goBack();
+      navigation.goBack();
       }, 500);
       return () => clearTimeout(timer);
     }

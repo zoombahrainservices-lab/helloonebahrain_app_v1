@@ -34,6 +34,8 @@ const Icon = ({ name, size, color }: { name: string; size: number; color: string
       'settings-outline': '⚙️',
       'log-out-outline': '🚪',
       'person': '👤',
+      'document-text-outline': '📄',
+      'shield-checkmark-outline': '🛡️',
     };
     return <Text style={{ fontSize: size, color }}>{iconMap[name] || '•'}</Text>;
   }
@@ -195,10 +197,73 @@ export default function ProfileScreen() {
 
         <TouchableOpacity 
           style={styles.menuItem}
+          onPress={() => {
+            try {
+              navigation.navigate('PrivacyPolicy' as any);
+            } catch (error) {
+              if (__DEV__) {
+                console.error('❌ Navigation error:', error);
+              }
+            }
+          }}
           activeOpacity={0.7}
         >
-          <Icon name="settings-outline" size={24} color="#374151" />
-          <Text style={styles.menuItemText}>Settings</Text>
+          <Icon name="document-text-outline" size={24} color="#374151" />
+          <Text style={styles.menuItemText}>Privacy Policy</Text>
+          <Text style={{ fontSize: 20, color: '#9ca3af' }}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => {
+            try {
+              navigation.navigate('TermsOfService' as any);
+            } catch (error) {
+              if (__DEV__) {
+                console.error('❌ Navigation error:', error);
+              }
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <Icon name="document-text-outline" size={24} color="#374151" />
+          <Text style={styles.menuItemText}>Terms of Service</Text>
+          <Text style={{ fontSize: 20, color: '#9ca3af' }}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => {
+            try {
+              navigation.navigate('TermsOfService' as any);
+            } catch (error) {
+              if (__DEV__) {
+                console.error('❌ Navigation error:', error);
+              }
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <Icon name="document-text-outline" size={24} color="#374151" />
+          <Text style={styles.menuItemText}>Terms of Service</Text>
+          <Text style={{ fontSize: 20, color: '#9ca3af' }}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => {
+            try {
+              navigation.navigate('PrivacyPolicy' as any);
+            } catch (error) {
+              if (__DEV__) {
+                console.error('❌ Navigation error:', error);
+              }
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <Icon name="shield-checkmark-outline" size={24} color="#374151" />
+          <Text style={styles.menuItemText}>Privacy Policy</Text>
           <Text style={{ fontSize: 20, color: '#9ca3af' }}>›</Text>
         </TouchableOpacity>
 

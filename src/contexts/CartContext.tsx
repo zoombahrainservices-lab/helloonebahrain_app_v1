@@ -49,12 +49,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               if (localItems.length > 0 && cartApi.syncCart) {
                 try {
                   // Sync local items to Supabase
-                  await cartApi.syncCart(user.id, localItems);
+                await cartApi.syncCart(user.id, localItems);
                   // Refresh cart after sync
-                  const syncedCart = await cartApi.getCart(user.id);
-                  setItems(syncedCart);
+                const syncedCart = await cartApi.getCart(user.id);
+                setItems(syncedCart);
                   // Clear local cart after successful sync
-                  await AsyncStorage.removeItem(CART_STORAGE_KEY);
+                await AsyncStorage.removeItem(CART_STORAGE_KEY);
                 } catch (syncError) {
                   // Sync failed, but we have database items, so continue
                   if (__DEV__) {
