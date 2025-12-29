@@ -13,11 +13,7 @@ let Ionicons: any;
 if (Platform.OS !== 'web') {
   try {
     Ionicons = require('@expo/vector-icons').Ionicons;
-  } catch (e) {
-    if (__DEV__) {
-      console.warn('Ionicons not available, using fallback');
-    }
-  }
+  } catch (e) {}
 }
 
 // Fallback icon component for web

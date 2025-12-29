@@ -17,11 +17,7 @@ export const ordersApi = {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        if (__DEV__) {
-          console.error('Error fetching orders from Supabase:', error);
-        }
-        throw error;
+      if (error) {throw error;
       }
 
       if (!data || data.length === 0) {
@@ -47,11 +43,7 @@ export const ordersApi = {
         createdAt: order.created_at,
         updatedAt: order.updated_at,
       }));
-    } catch (error: any) {
-      if (__DEV__) {
-        console.error('Error fetching orders:', error);
-      }
-      throw error;
+    } catch (error: any) {throw error;
     }
   },
 
@@ -71,11 +63,7 @@ export const ordersApi = {
         .eq('user_id', userId)
         .single();
 
-      if (error) {
-        if (__DEV__) {
-          console.error('Error fetching order from Supabase:', error);
-        }
-        throw error;
+      if (error) {throw error;
       }
 
       if (!data) {
@@ -101,11 +89,7 @@ export const ordersApi = {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
-    } catch (error: any) {
-      if (__DEV__) {
-        console.error('Error fetching order:', error);
-      }
-      throw error;
+    } catch (error: any) {throw error;
     }
   },
 
@@ -176,13 +160,7 @@ export const ordersApi = {
         .select()
         .single();
 
-      if (orderError) {
-        if (__DEV__) {
-          console.error('Error creating order in Supabase:', orderError);
-          console.error('User ID used:', orderData.userId);
-        }
-        
-        // If error is about foreign key constraint (user_id doesn't exist in auth.users)
+      if (orderError) {// If error is about foreign key constraint (user_id doesn't exist in auth.users)
         if (orderError.message?.includes('foreign key') || orderError.message?.includes('user_id') || orderError.code === '23503') {
           throw new Error('User account not found in database. Please log in again or contact support.');
         }
@@ -200,11 +178,7 @@ export const ordersApi = {
         .from('order_items')
         .insert(orderItemsWithOrderId);
 
-      if (itemsError) {
-        if (__DEV__) {
-          console.error('Error creating order items:', itemsError);
-        }
-        throw itemsError;
+      if (itemsError) {throw itemsError;
       }
 
       // Update stock quantities
@@ -233,11 +207,7 @@ export const ordersApi = {
         .eq('id', order.id)
         .single();
 
-      if (fetchError) {
-        if (__DEV__) {
-          console.error('Error fetching complete order:', fetchError);
-        }
-        throw fetchError;
+      if (fetchError) {throw fetchError;
       }
 
       // Transform to match expected format
@@ -259,11 +229,7 @@ export const ordersApi = {
         createdAt: completeOrder.created_at,
         updatedAt: completeOrder.updated_at,
       };
-    } catch (error: any) {
-      if (__DEV__) {
-        console.error('Error creating order:', error);
-      }
-      throw error;
+    } catch (error: any) {throw error;
     }
   },
 };

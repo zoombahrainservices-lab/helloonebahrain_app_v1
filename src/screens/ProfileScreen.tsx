@@ -19,11 +19,7 @@ let Ionicons: any;
 if (Platform.OS !== 'web') {
   try {
     Ionicons = require('@expo/vector-icons').Ionicons;
-  } catch (e) {
-    if (__DEV__) {
-      console.warn('Ionicons not available');
-    }
-  }
+  } catch (e) {}
 }
 
 // Fallback icon component
@@ -60,19 +56,11 @@ export default function ProfileScreen() {
       
       // Use setTimeout to ensure navigation happens after render
       setTimeout(() => {
-        try {
-          if (__DEV__) {
-            console.log('🔒 No user, redirecting to Login');
-          }
-          navigation.reset({
+        try {navigation.reset({
             index: 0,
             routes: [{ name: 'Login' }],
           });
-        } catch (error) {
-          if (__DEV__) {
-            console.error('❌ Navigation error:', error);
-          }
-          // Fallback: just navigate
+        } catch (error) {// Fallback: just navigate
           navigation.navigate('Login' as any);
         }
       }, 100);
@@ -85,35 +73,15 @@ export default function ProfileScreen() {
   }, [user, loading, navigation]);
 
   const handleLogout = async () => {
-    try {
-      if (__DEV__) {
-        console.log('🔴 LOGOUT BUTTON PRESSED');
-      }
-
-      // Call logout and wait for it to complete
-          await logout();
-
-      if (__DEV__) {
-        console.log('✅ Logout function completed');
-      }
-
-      // Wait a bit to ensure all cleanup is done
+    try {// Call logout and wait for it to complete
+          await logout();// Wait a bit to ensure all cleanup is done
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Navigate to Login screen and reset navigation stack
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
-      });
-
-      if (__DEV__) {
-        console.log('🔄 Navigation reset to Login');
-      }
-    } catch (error) {
-      if (__DEV__) {
-        console.error('❌ Logout handler error:', error);
-      }
-      // Force navigation even if logout fails
+      });} catch (error) {// Force navigation even if logout fails
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
@@ -148,11 +116,7 @@ export default function ProfileScreen() {
           onPress={() => {
             try {
               navigation.navigate('Login' as any);
-            } catch (error) {
-              if (__DEV__) {
-                console.error('❌ Navigation error:', error);
-              }
-            }
+            } catch (error) {}
           }}
         >
           <Text style={styles.loginButtonText}>Login</Text>
@@ -182,11 +146,7 @@ export default function ProfileScreen() {
           onPress={() => {
             try {
               navigation.navigate('Orders' as any);
-            } catch (error) {
-              if (__DEV__) {
-                console.error('❌ Navigation error:', error);
-              }
-            }
+            } catch (error) {}
           }}
           activeOpacity={0.7}
         >
@@ -200,11 +160,7 @@ export default function ProfileScreen() {
           onPress={() => {
             try {
               navigation.navigate('PrivacyPolicy' as any);
-            } catch (error) {
-              if (__DEV__) {
-                console.error('❌ Navigation error:', error);
-              }
-            }
+            } catch (error) {}
           }}
           activeOpacity={0.7}
         >
@@ -218,11 +174,7 @@ export default function ProfileScreen() {
           onPress={() => {
             try {
               navigation.navigate('TermsOfService' as any);
-            } catch (error) {
-              if (__DEV__) {
-                console.error('❌ Navigation error:', error);
-              }
-            }
+            } catch (error) {}
           }}
           activeOpacity={0.7}
         >
@@ -236,11 +188,7 @@ export default function ProfileScreen() {
           onPress={() => {
             try {
               navigation.navigate('TermsOfService' as any);
-            } catch (error) {
-              if (__DEV__) {
-                console.error('❌ Navigation error:', error);
-              }
-            }
+            } catch (error) {}
           }}
           activeOpacity={0.7}
         >
@@ -254,11 +202,7 @@ export default function ProfileScreen() {
           onPress={() => {
             try {
               navigation.navigate('PrivacyPolicy' as any);
-            } catch (error) {
-              if (__DEV__) {
-                console.error('❌ Navigation error:', error);
-              }
-            }
+            } catch (error) {}
           }}
           activeOpacity={0.7}
         >

@@ -17,8 +17,8 @@ export default function ContactScreen() {
           Hello One Bahrain – Zoom Consultancy
         </Text>
         <Text style={styles.contactInfo}>
-          Email: info@zoombahrain.co{'\n'}
-          Phone: +973 38816222{'\n'}
+          Email: support@helloonebahrain.com{'\n'}
+          Phone: +973 XXXXXXXX{'\n'}
           Address: Office No. 12, Building 656, Road 3625, Block 336, Adliya, Manama, Bahrain
         </Text>
       </View>

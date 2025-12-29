@@ -10,10 +10,10 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { api } from '../lib/api';
-import { supabaseHelpers } from '../lib/supabase-helpers';
-import { Product, Category } from '../lib/types';
-import ProductCard from '../components/ProductCard';
+import { api } from '@/lib/api';
+import { supabaseHelpers } from '@/lib/supabase-helpers';
+import { Product, Category } from '@/lib/types';
+import ProductCard from '@/components/ProductCard';
 
 export default function ProductListScreen() {
   const [products, setProducts] = useState<Product[]>([]);

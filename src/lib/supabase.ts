@@ -17,21 +17,7 @@ export const getSupabase = (): SupabaseClient => {
   if (!supabase) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       const errorMsg = 'Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_ANON_KEY in app.json or environment variables.';
-      if (__DEV__) {
-        console.error('⚠️ Supabase credentials not configured:', {
-          hasUrl: !!SUPABASE_URL,
-          hasKey: !!SUPABASE_ANON_KEY,
-          urlPreview: SUPABASE_URL ? `${SUPABASE_URL.substring(0, 20)}...` : 'Not set',
-        });
-      }
       throw new Error(errorMsg);
-    }
-
-    if (__DEV__) {
-      console.log('✅ Creating Supabase client:', {
-        url: SUPABASE_URL.substring(0, 30) + '...',
-        hasKey: !!SUPABASE_ANON_KEY,
-      });
     }
 
     // Detect if we're on web platform
@@ -65,12 +51,5 @@ export const getSupabase = (): SupabaseClient => {
   return supabase;
 };
 
-// Log configuration (without exposing keys) - only in development
-if (__DEV__) {
-  console.log('Supabase configured:', {
-    url: SUPABASE_URL ? `${SUPABASE_URL.substring(0, 20)}...` : 'Not set',
-    hasKey: !!SUPABASE_ANON_KEY,
-  });
-}
 
 export default getSupabase;

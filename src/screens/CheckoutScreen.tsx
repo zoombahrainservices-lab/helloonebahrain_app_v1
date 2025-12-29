@@ -115,12 +115,7 @@ export default function CheckoutScreen() {
     if (user?.id) {
       userId = user.id;
       userEmail = user.email || '';
-      userName = user.name || 'User';
-      
-      if (__DEV__) {
-        console.log('✅ Using user from AuthContext:', userId);
-      }
-    }
+      userName = user.name || 'User';}
     
     // Also check Supabase session (for Google auth users or if AuthContext user not available)
     const { getSupabase } = await import('../lib/supabase');
@@ -131,31 +126,14 @@ export default function CheckoutScreen() {
       // If we have Supabase session, prefer it (ensures valid Supabase user ID)
       userId = session.user.id;
       userEmail = session.user.email || userEmail || '';
-      userName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || userName || 'User';
-      
-      if (__DEV__) {
-        console.log('✅ Using user from Supabase session:', userId);
-      }
-    }
+      userName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || userName || 'User';}
     
     // If no user ID found, redirect to login
     if (!userId) {
-      setSubmitting(false);
-      if (__DEV__) {
-        console.log('❌ No user ID found, redirecting to login');
-      }
-      Alert.alert('Authentication Required', 'Please log in to place an order.');
+      setSubmitting(false);Alert.alert('Authentication Required', 'Please log in to place an order.');
       navigation.navigate('Login', { redirect: 'Checkout' });
       return;
-    }
-    
-    if (__DEV__) {
-      console.log('✅ User authenticated, proceeding with order creation');
-      console.log('✅ User ID:', userId);
-      console.log('✅ User Email:', userEmail);
-    }
-
-    // For COD - handle separately, no payment gateway needed
+    }// For COD - handle separately, no payment gateway needed
     if (paymentMethod === 'cod') {
       try {
         // Use Supabase directly to create order
@@ -196,13 +174,7 @@ export default function CheckoutScreen() {
         return; // Exit early for COD
       } catch (error: any) {
         // Only handle order creation errors for COD
-        setSubmitting(false);
-        
-        if (__DEV__) {
-          console.error('COD Order creation error:', error);
-        }
-
-        const errorMessage = error.message || 'Failed to create order. Please try again.';
+        setSubmitting(false);const errorMessage = error.message || 'Failed to create order. Please try again.';
         setError(errorMessage);
         Alert.alert('Error', errorMessage);
         return;
@@ -290,13 +262,7 @@ export default function CheckoutScreen() {
       } catch (paymentError: any) {
         // Payment gateway error - order is already created
         setSubmitting(false);
-        const paymentErrorMessage = paymentError.response?.data?.message || paymentError.message || 'Payment gateway error';
-        
-        if (__DEV__) {
-          console.error('Payment gateway error:', paymentError);
-        }
-
-        // Show error for payment gateway issues
+        const paymentErrorMessage = paymentError.response?.data?.message || paymentError.message || 'Payment gateway error';// Show error for payment gateway issues
         setError(paymentErrorMessage);
         setSubmitting(false);
         setOrderPlaced(true); // Mark order as placed to prevent navigation back
@@ -320,14 +286,7 @@ export default function CheckoutScreen() {
       }
     } catch (error: any) {
       // Order creation error for Card/Benefit
-      setSubmitting(false);
-      
-      if (__DEV__) {
-        console.error('Order creation error:', error);
-        console.error('Error response:', error.response?.data);
-      }
-
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create order. Please try again.';
+      setSubmitting(false);const errorMessage = error.response?.data?.message || error.message || 'Failed to create order. Please try again.';
       setError(errorMessage);
       Alert.alert('Error', errorMessage);
     }

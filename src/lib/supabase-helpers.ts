@@ -56,11 +56,7 @@ export const supabaseHelpers = {
 
     const { data, error, count } = await query;
 
-    if (error) {
-      if (__DEV__) {
-        console.error('Error fetching products from Supabase:', error);
-      }
-      throw error;
+    if (error) {throw error;
     }
 
     // Transform to camelCase for frontend
@@ -98,11 +94,7 @@ export const supabaseHelpers = {
       .eq('slug', slug)
       .single();
 
-    if (error) {
-      if (__DEV__) {
-        console.error('Error fetching product from Supabase:', error);
-      }
-      throw error;
+    if (error) {throw error;
     }
 
     if (!data) return null;
@@ -136,11 +128,7 @@ export const supabaseHelpers = {
       .select('*')
       .order('name', { ascending: true });
 
-    if (error) {
-      if (__DEV__) {
-        console.error('Error fetching categories from Supabase:', error);
-      }
-      throw error;
+    if (error) {throw error;
     }
 
     return (data || []).map((cat: any) => ({
@@ -159,11 +147,7 @@ export const supabaseHelpers = {
       .eq('active', true)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      if (__DEV__) {
-        console.error('Error fetching banners from Supabase:', error);
-      }
-      throw error;
+    if (error) {throw error;
     }
 
     if (!data || data.length === 0) return [];

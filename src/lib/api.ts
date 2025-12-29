@@ -19,10 +19,6 @@ export const api = axios.create({
   withCredentials: false,
 });
 
-// Log API configuration for debugging (only in development)
-if (__DEV__) {
-  console.log('API Base URL:', API_BASE_URL);
-}
 
 // Cache for backend JWT tokens (to avoid repeated exchanges)
 let backendTokenCache: { supabaseToken: string; backendToken: string; expiresAt: number } | null = null;

@@ -110,9 +110,6 @@ export default function HomeScreen() {
       // Try Supabase first, fallback to API
       try {
         const result = await supabaseHelpers.searchProducts(params);
-        if (__DEV__) {
-          console.log('Products from Supabase:', result.data.length);
-        }
         setProducts(result.data);
       } catch (supabaseError) {
         if (__DEV__) {

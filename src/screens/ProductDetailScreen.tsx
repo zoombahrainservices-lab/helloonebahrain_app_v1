@@ -56,11 +56,7 @@ export default function ProductDetailScreen() {
         if (productData) {
           setProduct(productData);
         }
-      } catch (supabaseError) {
-        if (__DEV__) {
-          console.warn('Supabase product fetch failed, trying API:', supabaseError);
-        }
-        const response = await api.get(`/api/products/${slug}`);
+      } catch (supabaseError) {const response = await api.get(`/api/products/${slug}`);
         productData = response.data;
         setProduct(productData);
       }
@@ -80,11 +76,7 @@ export default function ProductDetailScreen() {
         setRelatedProducts(
           relatedResult.data.filter((p: Product) => p._id !== productData!._id)
         );
-      } catch (supabaseError) {
-        if (__DEV__) {
-          console.warn('Supabase related products fetch failed, trying API:', supabaseError);
-        }
-        try {
+      } catch (supabaseError) {try {
           const relatedResponse = await api.get('/api/products', {
             params: { category: productData.category, limit: 4 },
           });
@@ -93,18 +85,10 @@ export default function ProductDetailScreen() {
               (p: Product) => p._id !== productData!._id
             )
           );
-        } catch (apiError) {
-          if (__DEV__) {
-            console.error('Error fetching related products:', apiError);
-          }
-          setRelatedProducts([]);
+        } catch (apiError) {setRelatedProducts([]);
         }
       }
-    } catch (error) {
-      if (__DEV__) {
-        console.error('Error fetching product:', error);
-      }
-      Alert.alert('Error', 'Failed to load product');
+    } catch (error) {Alert.alert('Error', 'Failed to load product');
       navigation.goBack();
     } finally {
       setLoading(false);

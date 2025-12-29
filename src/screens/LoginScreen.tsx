@@ -14,8 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth } from '@/contexts/AuthContext';
-import { RootStackParamList } from '@/navigation/AppNavigator';
+import { useAuth } from '../contexts/AuthContext';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 type LoginRouteProp = RouteProp<RootStackParamList, 'Login'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -55,18 +55,7 @@ export default function LoginScreen() {
         navigation.navigate('MainTabs', { screen: 'Home' });
       }
     } catch (error: any) {
-      // Handle different error formats (Supabase, axios, etc.)
-      let errorMessage = 'Invalid credentials';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      Alert.alert('Login Failed', errorMessage);
+      Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -151,7 +140,7 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              style={[styles.loginButton, (loading || googleLoading) && styles.loginButtonDisabled]}
               onPress={handleLogin}
               disabled={loading || googleLoading}
             >
@@ -187,17 +176,6 @@ export default function LoginScreen() {
               <Text style={styles.registerText}>Don't have an account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
                 <Text style={styles.registerLink}>Register</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.policyLinks}>
-              <Text style={styles.policyText}>By continuing, you agree to our </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')}>
-                <Text style={styles.policyLink}>Terms of Service</Text>
-              </TouchableOpacity>
-              <Text style={styles.policyText}> and </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
-                <Text style={styles.policyLink}>Privacy Policy</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -347,23 +325,6 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontSize: 16,
     fontWeight: '600',
-  },
-  policyLinks: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginTop: 16,
-    paddingHorizontal: 8,
-  },
-  policyText: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  policyLink: {
-    fontSize: 12,
-    color: '#dc2626',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
   },
 });
 

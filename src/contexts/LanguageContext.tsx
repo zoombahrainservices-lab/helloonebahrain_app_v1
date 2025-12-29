@@ -38,11 +38,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         if (savedLanguage === 'en' || savedLanguage === 'ar') {
           setLanguageState(savedLanguage);
         }
-      } catch (error) {
-        if (__DEV__) {
-          console.error('Error loading language:', error);
-        }
-      }
+      } catch (error) {}
     };
     loadLanguage();
   }, []);
@@ -51,11 +47,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setLanguageState(lang);
     try {
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-      } catch (error) {
-        if (__DEV__) {
-          console.error('Error saving language:', error);
-        }
-      }
+      } catch (error) {}
   };
 
   const t = (key: string): string => {

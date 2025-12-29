@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function RegisterScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { register, loginWithGoogle } = useAuth();
+  const isMountedRef = useRef(true);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -33,6 +34,12 @@ export default function RegisterScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const handleRegister = async () => {
     if (!formData.name || !formData.email || !formData.password || !formData.phone) {
@@ -70,24 +77,27 @@ export default function RegisterScreen() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
-      Alert.alert('Success', 'Logged in with Google!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('MainTabs', { screen: 'Home' }),
-        },
-      ]);
-    } catch (error: any) {
-      let errorMessage = 'Google login failed';
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
+      // Only navigate if component is still mounted
+      if (isMountedRef.current) {
+        navigation.navigate('MainTabs', { screen: 'Home' });
       }
-      
-      Alert.alert('Google Login Failed', errorMessage);
+    } catch (error: any) {
+      // Only show alert if component is still mounted
+      if (isMountedRef.current) {
+        let errorMessage = 'Google login failed';
+        
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+        
+        Alert.alert('Google Login Failed', errorMessage);
+      }
     } finally {
-      setGoogleLoading(false);
+      if (isMountedRef.current) {
+        setGoogleLoading(false);
+      }
     }
   };
 

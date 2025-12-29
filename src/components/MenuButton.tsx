@@ -38,10 +38,7 @@ const MenuButton = () => {
     try {
       await logout();
       navigation.navigate('Login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+    } catch (error) {};
 
   return (
     <>
@@ -209,6 +206,15 @@ const styles = StyleSheet.create({
 });
 
 export default MenuButton;
+
+
+
+
+
+
+
+
+
 
 
 

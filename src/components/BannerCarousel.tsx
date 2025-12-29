@@ -112,9 +112,7 @@ export default function BannerCarousel({ banners }: BannerCarouselProps) {
         } else {
           Alert.alert('Error', 'Cannot open this URL');
         }
-      } catch (error) {
-        console.error('Error opening URL:', error);
-        Alert.alert('Error', 'Failed to open link');
+      } catch (error) {Alert.alert('Error', 'Failed to open link');
       }
       return;
     }
@@ -143,9 +141,7 @@ export default function BannerCarousel({ banners }: BannerCarouselProps) {
             // Fallback: try direct navigation (might work in some cases)
             (navigation as any).navigate('ProductDetail', { slug });
           }
-        } catch (error) {
-          console.error('Navigation error:', error);
-          Alert.alert('Error', 'Failed to navigate to product');
+        } catch (error) {Alert.alert('Error', 'Failed to navigate to product');
         }
         return;
       }
@@ -164,13 +160,9 @@ export default function BannerCarousel({ banners }: BannerCarouselProps) {
 
       // Handle other internal routes - try to navigate
       if (link.startsWith('/')) {
-        // For unknown routes, try to open as URL or show alert
-        console.warn('Unknown internal route:', link);
-        Alert.alert('Navigation', `Route "${link}" is not yet implemented`);
+        // For unknown routes, try to open as URL or show alertAlert.alert('Navigation', `Route "${link}" is not yet implemented`);
       }
-    } catch (error) {
-      console.error('Navigation error:', error);
-      Alert.alert('Error', 'Failed to navigate');
+    } catch (error) {Alert.alert('Error', 'Failed to navigate');
     }
   };
 

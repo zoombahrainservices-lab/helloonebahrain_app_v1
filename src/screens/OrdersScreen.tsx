@@ -42,9 +42,7 @@ export default function OrdersScreen() {
       // Use Supabase directly instead of backend API
       const userOrders = await ordersApi.getUserOrders(user.id);
       setOrders(userOrders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      setOrders([]);
+    } catch (error) {setOrders([]);
     } finally {
       setLoading(false);
     }
